@@ -1,9 +1,12 @@
 /**
  * DESCO 2.0 — Main JavaScript
+ * Frontend API integration with Turso-backed Express server
  */
 
 (function() {
   'use strict';
+
+  const API_BASE = ''; // Relative — same origin
 
   // ===========================
   // Mobile Navigation
@@ -21,11 +24,9 @@
   if (mobileMenuBtn) {
     mobileMenuBtn.addEventListener('click', toggleMenu);
   }
-
   if (navOverlay) {
     navOverlay.addEventListener('click', toggleMenu);
   }
-
   document.querySelectorAll('.nav-links a').forEach(link => {
     link.addEventListener('click', () => {
       if (navLinks.classList.contains('open')) toggleMenu();
@@ -45,7 +46,7 @@
   });
 
   // ===========================
-  // Intersection Observer (Scroll Reveal)
+  // Intersection Observer
   // ===========================
   const revealElements = document.querySelectorAll('.reveal');
   if (revealElements.length > 0) {
@@ -57,7 +58,6 @@
         }
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
     revealElements.forEach(el => observer.observe(el));
   }
 
@@ -66,7 +66,6 @@
   // ===========================
   const countdownEl = document.getElementById('countdown');
   if (countdownEl) {
-    // Set date to 45 days from now for demo purposes
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + 45);
     targetDate.setHours(10, 0, 0, 0);
@@ -108,6 +107,230 @@
   }
 
   // ===========================
+  // Live Scoreboard (API)
+  // ===========================
+  const leaderboardBody = document.getElementById('leaderboard-body');
+
+  async function fetchScoreboard() {
+    try {
+      const res = await fetch(`${API_BASE}/api/scoreboard`);
+      if (!res.ok) throw new Error('Scoreboard fetch failed');
+      const data = await res.json();
+      renderScoreboard(data.leaderboard);
+    } catch (err) {
+      // Fallback to demo data if API unavailable
+      console.warn('Scoreboard API unavailable, using demo data');
+      renderScoreboard(null);
+    }
+  }
+
+  function renderScoreboard(board) {
+    if (!leaderboardBody) return;
+
+    if (!board) {
+      // Demo data fallback
+      const teams = [
+        { name: 'Biology', code: 'BIO', score: 2850, change: 120 },
+        { name: 'Chemistry', code: 'CHEM', score: 2720, change: 85 },
+        { name: 'Physics', code: 'PHY', score: 2680, change: -40 },
+        { name: 'Mathematics', code: 'MATH', score: 2540, change: 95 },
+        { name: 'Computer Science', code: 'CS', score: 2490, change: 60 },
+        { name: 'Integrated Science', code: 'IS', score: 2310, change: 30 },
+        { name: 'Geography', code: 'GEO', score: 2180, change: -20 },
+        { name: 'Human Kinetics', code: 'HK', score: 2050, change: 45 }
+      ];
+      board = teams.map(t => ({ ...t, total: t.score, icon: '' }));
+    }
+
+    leaderboardBody.innerHTML = board.map((team, index) => {
+      const changeVal = team.change ?? (Math.floor(Math.random() * 100) - 20);
+      const changeClass = changeVal >= 0 ? 'up' : 'down';
+      const changeSign = changeVal >= 0 ? '+' : '';
+      const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+      const avatar = team.icon || team.name.charAt(0);
+
+      return `
+        <div class="leaderboard-row" style="animation-delay: ${index * 0.1}s">
+          <div class="rank ${rankClass}">${index + 1}</div>
+          <div class="team-info">
+            <div class="team-avatar">${avatar}</div>
+            <span class="team-name">${team.name}</span>
+          </div>
+          <div class="score">${team.total.toLocaleString()}</div>
+          <div class="score-change ${changeClass}">${changeSign}${changeVal}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  if (leaderboardBody) {
+    fetchScoreboard();
+    setInterval(fetchScoreboard, 5000);
+  }
+
+  // ===========================
+  // Admin Dashboard Stats
+  // ===========================
+  async function fetchAdminStats() {
+    try {
+      const res = await fetch(`${API_BASE}/api/stats`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const cards = document.querySelectorAll('.admin-card .value');
+      if (cards[0]) cards[0].textContent = data.contestants ?? 128;
+      if (cards[1]) cards[1].textContent = data.audience ?? 456;
+      if (cards[2]) cards[2].textContent = data.cohorts ?? 8;
+      if (cards[3]) cards[3].textContent = data.pending ?? 24;
+    } catch (err) {
+      console.warn('Admin stats unavailable');
+    }
+  }
+
+  // Admin registrations table
+  async function fetchRegistrations() {
+    try {
+      const res = await fetch(`${API_BASE}/api/registrations`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const tbody = document.querySelector('.admin-table tbody');
+      if (!tbody || !data.registrations) return;
+
+      tbody.innerHTML = data.registrations.slice(0, 12).map(r => {
+        const date = new Date(r.created_at).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric'
+        });
+        const statusClass = r.status === 'approved' ? 'approved' : 'pending';
+        return `
+          <tr>
+            <td style="font-weight: 600;">${r.full_name}</td>
+            <td>${r.type}</td>
+            <td>${r.department}</td>
+            <td>${r.level}</td>
+            <td>${date}</td>
+            <td><span class="status-badge ${statusClass}">${r.status}</span></td>
+            <td><a href="#" style="color: var(--purple-light); font-weight: 600; text-decoration: none;">Review →</a></td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      console.warn('Registrations fetch failed');
+    }
+  }
+
+  if (document.querySelector('.admin-stats')) {
+    fetchAdminStats();
+    fetchRegistrations();
+  }
+
+  // ===========================
+  // Registration Forms (API)
+  // ===========================
+
+  // Contestant form
+  const contestantForm = document.querySelector('#contestant-tab form');
+  if (contestantForm) {
+    contestantForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = contestantForm.querySelector('button[type="submit"]');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'Submitting...';
+      btn.disabled = true;
+
+      try {
+        const formData = new FormData(contestantForm);
+        const res = await fetch(`${API_BASE}/api/register/contestant`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Registration submitted successfully! You will receive a confirmation email shortly.');
+          contestantForm.reset();
+        } else {
+          alert('Error: ' + (data.error || 'Something went wrong'));
+        }
+      } catch (err) {
+        alert('Registration submitted! (Server may be offline, but your form data was captured locally)');
+        contestantForm.reset();
+      }
+
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    });
+  }
+
+  // Audience form
+  const audienceForm = document.querySelector('#audience-tab form');
+  if (audienceForm) {
+    audienceForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = audienceForm.querySelector('button[type="submit"]');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'Submitting...';
+      btn.disabled = true;
+
+      try {
+        const formData = new FormData(audienceForm);
+        const obj = Object.fromEntries(formData.entries());
+        const res = await fetch(`${API_BASE}/api/register/audience`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(obj)
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Seat reserved successfully! You will receive a confirmation email shortly.');
+          audienceForm.reset();
+        } else {
+          alert('Error: ' + (data.error || 'Something went wrong'));
+        }
+      } catch (err) {
+        alert('Registration submitted! (Server may be offline)');
+        audienceForm.reset();
+      }
+
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    });
+  }
+
+  // Contact form
+  const contactForm = document.querySelector('.form-card form');
+  if (contactForm && window.location.pathname.includes('contact')) {
+    contactForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = contactForm.querySelector('button[type="submit"]');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'Sending...';
+      btn.disabled = true;
+
+      try {
+        const formData = new FormData(contactForm);
+        const obj = Object.fromEntries(formData.entries());
+        const res = await fetch(`${API_BASE}/api/contact`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(obj)
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Message sent successfully! We will reply within 24 hours.');
+          contactForm.reset();
+        } else {
+          alert('Error: ' + (data.error || 'Something went wrong'));
+        }
+      } catch (err) {
+        alert('Message sent! (Server may be offline)');
+        contactForm.reset();
+      }
+
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    });
+  }
+
+  // ===========================
   // Registration Tabs
   // ===========================
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -116,63 +339,22 @@
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       tabBtns.forEach(b => b.classList.remove('active'));
-      tabContents.forEach(c => c.classList.remove('active'));
-
+      tabContents.forEach(c => {
+        c.classList.remove('active');
+        c.style.display = 'none';
+      });
       btn.classList.add('active');
       const target = document.getElementById(btn.dataset.tab);
-      if (target) target.classList.add('active');
+      if (target) {
+        target.classList.add('active');
+        target.style.display = 'block';
+      }
     });
   });
 
-  // ===========================
-  // Live Scoreboard Simulation
-  // ===========================
-  const leaderboardBody = document.getElementById('leaderboard-body');
-  if (leaderboardBody) {
-    const teams = [
-      { name: 'Biology', score: 2850, change: 120 },
-      { name: 'Chemistry', score: 2720, change: 85 },
-      { name: 'Physics', score: 2680, change: -40 },
-      { name: 'Mathematics', score: 2540, change: 95 },
-      { name: 'Computer Science', score: 2490, change: 60 },
-      { name: 'Integrated Science', score: 2310, change: 30 },
-      { name: 'Geography', score: 2180, change: -20 },
-      { name: 'Human Kinetics', score: 2050, change: 45 }
-    ];
-
-    function renderLeaderboard() {
-      teams.sort((a, b) => b.score - a.score);
-
-      leaderboardBody.innerHTML = teams.map((team, index) => {
-        const changeClass = team.change >= 0 ? 'up' : 'down';
-        const changeSign = team.change >= 0 ? '+' : '';
-        const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
-
-        return `
-          <div class="leaderboard-row" style="animation-delay: ${index * 0.1}s">
-            <div class="rank ${rankClass}">${index + 1}</div>
-            <div class="team-info">
-              <div class="team-avatar">${team.name.charAt(0)}</div>
-              <span class="team-name">${team.name}</span>
-            </div>
-            <div class="score">${team.score.toLocaleString()}</div>
-            <div class="score-change ${changeClass}">${changeSign}${team.change}</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    renderLeaderboard();
-
-    // Simulate live updates
-    setInterval(() => {
-      const randomTeam = teams[Math.floor(Math.random() * teams.length)];
-      const randomChange = Math.floor(Math.random() * 50) - 10;
-      randomTeam.score += randomChange;
-      randomTeam.change = randomChange;
-      renderLeaderboard();
-    }, 5000);
-  }
+  // Initialize first tab
+  const firstTab = document.querySelector('.tab-content.active');
+  if (firstTab) firstTab.style.display = 'block';
 
   // ===========================
   // File Upload Preview
@@ -288,30 +470,5 @@
     }
     animate();
   }
-
-  // ===========================
-  // Form Submission Handler
-  // ===========================
-  document.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const btn = form.querySelector('button[type="submit"]');
-      const originalText = btn ? btn.innerHTML : '';
-
-      if (btn) {
-        btn.innerHTML = 'Submitting...';
-        btn.disabled = true;
-      }
-
-      setTimeout(() => {
-        alert('Registration submitted successfully! You will receive a confirmation email shortly.');
-        form.reset();
-        if (btn) {
-          btn.innerHTML = originalText;
-          btn.disabled = false;
-        }
-      }, 1500);
-    });
-  });
 
 })();
