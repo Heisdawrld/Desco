@@ -6,14 +6,17 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "db:setup": "node setup-db.js"
+    "db:setup": "node -e \"const {initDb} = require('./api/app'); initDb()\""
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "multer": "^1.4.5-lts.1"
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^1.4.5-lts.1",
+    "serverless-http": "^3.2.0"
   },
   "engines": {
     "node": ">=18.0.0"
