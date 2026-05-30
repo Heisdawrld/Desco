@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS contestants (
     level TEXT NOT NULL,
     phone TEXT NOT NULL,
     email TEXT NOT NULL,
-    passport_filename TEXT,
+    passport_base64 TEXT,
     status TEXT DEFAULT 'pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -145,7 +145,7 @@ INSERT OR IGNORE INTO scores (cohort_code, round_name, points) VALUES
 ('HK', 'Blackout Question', 180);
 `;
 
-// Initialize DB
+// Initialize DB + migrations
 async function initDb() {
   try {
     // Try file first (local dev)
@@ -163,6 +163,30 @@ async function initDb() {
     for (const stmt of statements) {
       await turso.execute(stmt);
     }
+
+    // Migration: add passport_base64 if missing (old deployments used passport_filename)
+    try {
+      await turso.execute(`ALTER TABLE contestants ADD COLUMN passport_base64 TEXT`);
+      console.log('✅ Migrated: added passport_base64 column');
+    } catch (migrateErr) {
+      // Column likely already exists — ignore
+    }
+
+    // Seed BIO scores if missing (sometimes gets zeroed)
+    const bioCheck = await turso.execute(`SELECT SUM(points) as total FROM scores WHERE cohort_code = 'BIO'`);
+    if ((bioCheck.rows[0]?.total || 0) === 0) {
+      await turso.execute(`
+        INSERT OR REPLACE INTO scores (cohort_code, round_name, points) VALUES
+        ('BIO', 'Academic Sprint', 480),
+        ('BIO', 'Cross-Discipline Clash', 520),
+        ('BIO', 'Specialist Round', 610),
+        ('BIO', 'Puzzle & Logic Arena', 440),
+        ('BIO', 'Buzzer War', 470),
+        ('BIO', 'Blackout Question', 330)
+      `);
+      console.log('✅ Reseeded Biology scores');
+    }
+
     console.log('✅ Database initialized');
   } catch (err) {
     console.error('DB init error:', err.message);
