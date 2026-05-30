@@ -239,9 +239,12 @@
 
       try {
         const formData = new FormData(contestantForm);
+        const obj = Object.fromEntries(formData.entries());
+        // Netlify serverless doesn't handle multipart well — send as JSON
         const res = await fetch(`${API_BASE}/api/register/contestant`, {
           method: 'POST',
-          body: formData
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(obj)
         });
         const data = await res.json();
         if (data.success) {

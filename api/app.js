@@ -300,18 +300,17 @@ app.post('/api/scoreboard/bulk', requireAuth, async (req, res) => {
 
 // ---------- REGISTRATIONS ----------
 
-app.post('/api/register/contestant', upload.single('passport'), async (req, res) => {
+app.post('/api/register/contestant', async (req, res) => {
   try {
     const { full_name, department, level, phone, email } = req.body;
     if (!full_name || !department || !level || !phone || !email) {
       return res.status(400).json({ error: 'All fields are required' });
     }
-    const filename = req.file ? req.file.originalname : null;
     const cohortCode = department.substring(0, 4).toUpperCase();
     await turso.execute({
       sql: `INSERT INTO contestants (full_name, department, cohort_code, level, phone, email, passport_filename)
             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      args: [full_name, department, cohortCode, level, phone, email, filename]
+      args: [full_name, department, cohortCode, level, phone, email, null]
     });
     res.status(201).json({ success: true, message: 'Contestant registered successfully' });
   } catch (err) {
