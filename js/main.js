@@ -240,7 +240,13 @@
       try {
         const formData = new FormData(contestantForm);
         const obj = Object.fromEntries(formData.entries());
-        // Netlify serverless doesn't handle multipart well — send as JSON
+
+        // Convert passport file to base64 if selected
+        const fileInput = document.getElementById('passport-upload');
+        if (fileInput && fileInput.files[0]) {
+          obj.passport_base64 = await fileToBase64(fileInput.files[0]);
+        }
+
         const res = await fetch(`${API_BASE}/api/register/contestant`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -250,6 +256,8 @@
         if (data.success) {
           alert('Registration submitted successfully! You will receive a confirmation email shortly.');
           contestantForm.reset();
+          const uploadText = document.querySelector('.file-upload-text');
+          if (uploadText) uploadText.textContent = 'Click to upload or drag & drop your passport photo';
         } else {
           alert('Error: ' + (data.error || 'Something went wrong'));
         }
@@ -260,6 +268,16 @@
 
       btn.innerHTML = originalText;
       btn.disabled = false;
+    });
+  }
+
+  // Helper: convert File to base64 string
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
   }
 

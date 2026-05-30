@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS contestants (
     level TEXT NOT NULL,
     phone TEXT NOT NULL,
     email TEXT NOT NULL,
-    passport_filename TEXT,
+    passport_base64 TEXT,
     status TEXT DEFAULT 'pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

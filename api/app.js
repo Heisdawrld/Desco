@@ -302,15 +302,15 @@ app.post('/api/scoreboard/bulk', requireAuth, async (req, res) => {
 
 app.post('/api/register/contestant', async (req, res) => {
   try {
-    const { full_name, department, level, phone, email } = req.body;
+    const { full_name, department, level, phone, email, passport_base64 } = req.body;
     if (!full_name || !department || !level || !phone || !email) {
       return res.status(400).json({ error: 'All fields are required' });
     }
     const cohortCode = department.substring(0, 4).toUpperCase();
     await turso.execute({
-      sql: `INSERT INTO contestants (full_name, department, cohort_code, level, phone, email, passport_filename)
+      sql: `INSERT INTO contestants (full_name, department, cohort_code, level, phone, email, passport_base64)
             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      args: [full_name, department, cohortCode, level, phone, email, null]
+      args: [full_name, department, cohortCode, level, phone, email, passport_base64 || null]
     });
     res.status(201).json({ success: true, message: 'Contestant registered successfully' });
   } catch (err) {
@@ -340,7 +340,7 @@ app.post('/api/register/audience', async (req, res) => {
 app.get('/api/registrations', requireAuth, async (req, res) => {
   try {
     const contestants = await turso.execute(`
-      SELECT id, full_name, department, level, phone, email, status, created_at
+      SELECT id, full_name, department, level, phone, email, status, created_at, passport_base64
       FROM contestants ORDER BY created_at DESC`);
     const audience = await turso.execute(`
       SELECT id, full_name, department, level, phone, email, status, created_at

@@ -231,14 +231,14 @@
             <button class="tab-btn" onclick="filterRegs('Contestant', this)">Contestants</button>
             <button class="tab-btn" onclick="filterRegs('Audience', this)">Audience</button>
           </div>
-          <div class="admin-table-container">
-            <table class="admin-table" id="reg-table">
-              <thead>
-                <tr><th>Name</th><th>Type</th><th>Department</th><th>Level</th><th>Date</th><th>Status</th><th>Action</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
+      <div class="admin-table-container">
+        <table class="admin-table" id="reg-table">
+          <thead>
+            <tr><th>Photo</th><th>Name</th><th>Type</th><th>Department</th><th>Level</th><th>Date</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
         </div>
 
         <!-- MESSAGES VIEW -->
@@ -428,8 +428,10 @@
         const st = x.status === 'approved' ? 'approved' : 'pending';
         const next = x.status === 'approved' ? 'pending' : 'approved';
         const btnText = x.status === 'approved' ? 'Revoke' : 'Approve';
+        const photo = x.passport_base64 ? `<img src="${x.passport_base64}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(139,92,246,0.3);">` : `<div style="width:40px;height:40px;border-radius:50%;background:rgba(139,92,246,0.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">👤</div>`;
         return `
           <tr>
+            <td>${photo}</td>
             <td style="font-weight:600;">${x.full_name}</td>
             <td>${x.type}</td>
             <td>${x.department}</td>
