@@ -216,10 +216,10 @@ app.get('/api/health', async (req, res) => {
 
 app.post('/api/admin/login', async (req, res) => {
   const { password } = req.body;
-  const adminPass = process.env.ADMIN_PASSWORD || 'desco2admin';
+  const adminPass = process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD || 'desco2admin';
   if (!password) return res.status(400).json({ error: 'Password required' });
 
-  // In production env, store bcrypt hash. For now compare plain or hash.
+  // Supports bcrypt hash or plain text fallback
   const isValid = await bcryptjs.compare(password, adminPass).catch(() => password === adminPass);
   if (!isValid) return res.status(401).json({ error: 'Invalid password' });
 
