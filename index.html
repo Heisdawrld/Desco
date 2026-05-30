@@ -4,11 +4,69 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DESCO 2.0 — The Ultimate Academic & Intellectual Showdown</title>
-  <meta name="description" content="DESCO 2.0 organized by ULSESA. Dominate or Don't Show Up.">
+  <meta name="description" content="DESCO 2.0 organized by ULSESA. The premier intellectual competition for Science Education students at the University of Lagos.">
+  <meta property="og:title" content="DESCO 2.0 — The Ultimate Academic & Intellectual Showdown">
+  <meta property="og:description" content="Six rounds. Eight cohorts. One champion. Organized by ULSESA, University of Lagos.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://desco2-0.netlify.app/">
+  <meta property="og:image" content="https://desco2-0.netlify.app/images/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="images/logo.png">
   <link rel="stylesheet" href="css/style.css">
   <style>
     .cohort-icon-svg { width: 48px; height: 48px; margin: 0 auto 16px; }
     .cohort-icon-svg svg { width: 100%; height: 100%; }
+    .hero-visual-img {
+      position: relative;
+      z-index: 1;
+      max-width: 380px;
+      width: 100%;
+      filter: drop-shadow(0 0 60px rgba(139,92,246,0.25));
+      animation: float 4s ease-in-out infinite;
+    }
+    .sponsors-coming-soon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      opacity: 0.6;
+    }
+    .sponsor-pill {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 12px 28px;
+      border: 1px solid rgba(139,92,246,0.1);
+      border-radius: var(--radius-full);
+      transition: var(--transition-base);
+    }
+    .sponsor-pill:hover {
+      border-color: rgba(139,92,246,0.25);
+      color: var(--gray-500);
+    }
+    .sponsor-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 32px;
+      font-size: 0.9rem;
+      color: var(--purple-glow);
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition-base);
+    }
+    .sponsor-cta:hover {
+      color: var(--white);
+      gap: 14px;
+    }
+    .sponsor-cta svg {
+      width: 18px;
+      height: 18px;
+    }
   </style>
 </head>
 <body>
@@ -16,7 +74,10 @@
 
   <nav class="navbar">
     <div class="container">
-      <a href="index.html" class="logo">DESCO<span>2.0</span></a>
+      <a href="index.html" class="logo">
+        <img src="images/logo.png" alt="DESCO" style="height: 36px; width: auto; border-radius: 6px;">
+        <span style="margin-left: 8px;">2.0</span>
+      </a>
       <ul class="nav-links">
         <li><a href="index.html" class="active">Home</a></li>
         <li><a href="about.html">About</a></li>
@@ -27,7 +88,9 @@
         <li><a href="contact.html">Contact</a></li>
         <li><a href="register.html" class="nav-cta">Register Now</a></li>
       </ul>
-      <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open');document.querySelector('.nav-overlay').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+      <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open');document.querySelector('.nav-overlay').classList.toggle('open')" aria-label="Toggle menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
     </div>
     <div class="nav-overlay" onclick="document.querySelector('.nav-links').classList.remove('open');document.querySelector('.nav-overlay').classList.remove('open')"></div>
   </nav>
@@ -70,9 +133,9 @@
       <div class="intro-grid">
         <div class="intro-content reveal">
           <div class="section-label">About The Event</div>
-          <h3>Where Intellect, Speed, Strategy & Excellence Collide</h3>
+          <h3>Where Intellect, Speed, Strategy &amp; Excellence Collide</h3>
           <p>DESCO (Departmental Showdown Competition) is the premier intellectual battleground for Science Education students at the University of Lagos. DESCO 2.0 raises the stakes higher than ever before.</p>
-          <p>Six grueling rounds. Eight cohorts. One champion. This isn't just a quiz — it's a war of minds where only the sharpest survive.</p>
+          <p>Six rigorous rounds. Eight cohorts. One champion. This isn't just a quiz — it's the ultimate test of knowledge and teamwork where only the sharpest survive.</p>
           <div class="intro-stats">
             <div class="stat-card reveal">
               <span class="stat-number">8</span>
@@ -89,7 +152,7 @@
           </div>
         </div>
         <div class="intro-visual reveal">
-          <div class="trophy-wrapper">🏆</div>
+          <img src="images/about-hero.png" alt="DESCO Competition" class="hero-visual-img" loading="lazy">
         </div>
       </div>
     </div>
@@ -170,15 +233,18 @@
     <div class="container">
       <div class="section-header reveal">
         <div class="section-label">Partners</div>
-        <h2>Our Sponsors</h2>
-        <p>Powered by organizations that believe in academic excellence</p>
+        <h2>Powered By</h2>
+        <p style="color: var(--gray-500);">Organized with the support of the University of Lagos community</p>
       </div>
-      <div class="sponsors-grid reveal">
-        <div class="sponsor-item">ULSESA</div>
-        <div class="sponsor-item">UNILAG</div>
-        <div class="sponsor-item">Partner 3</div>
-        <div class="sponsor-item">Partner 4</div>
-        <div class="sponsor-item">Partner 5</div>
+      <div class="sponsors-coming-soon reveal">
+        <div class="sponsor-pill">ULSESA</div>
+        <div class="sponsor-pill">University of Lagos</div>
+      </div>
+      <div style="text-align: center;">
+        <a href="contact.html" class="sponsor-cta">
+          Become a Sponsor
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
       </div>
     </div>
   </section>
@@ -190,10 +256,10 @@
           <a href="index.html" class="footer-brand">DESCO<span>2.0</span></a>
           <p class="footer-desc">The Ultimate Academic & Intellectual Showdown. Organized by ULSESA, University of Lagos.</p>
           <div class="footer-social">
-            <a href="#" class="social-link" aria-label="Twitter">𝕏</a>
-            <a href="#" class="social-link" aria-label="Instagram">IG</a>
-            <a href="#" class="social-link" aria-label="LinkedIn">in</a>
-            <a href="#" class="social-link" aria-label="YouTube">YT</a>
+            <a href="#" class="social-link" aria-label="Twitter" style="font-size: 0.85rem; font-weight: 700;">𝕏</a>
+            <a href="https://www.instagram.com/ulsesa01/" target="_blank" rel="noopener" class="social-link" aria-label="Instagram" style="font-size: 0.85rem; font-weight: 700;">IG</a>
+            <a href="#" class="social-link" aria-label="LinkedIn" style="font-size: 0.85rem; font-weight: 700;">in</a>
+            <a href="#" class="social-link" aria-label="YouTube" style="font-size: 0.85rem; font-weight: 700;">YT</a>
           </div>
         </div>
         <div>
@@ -233,7 +299,6 @@
 
   <script src="js/main.js"></script>
   <script>
-    // Cursor glow effect
     (function() {
       const glow = document.getElementById('cursor-glow');
       if (!glow || window.matchMedia('(pointer: coarse)').matches) return;

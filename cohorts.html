@@ -4,14 +4,134 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cohorts — DESCO 2.0</title>
+  <meta name="description" content="Meet the eight competing cohorts of DESCO 2.0. Eight departments, one title.">
+  <meta property="og:title" content="The Cohorts — DESCO 2.0">
+  <meta property="og:description" content="Eight departments. Eight identities. One title on the line.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/png" href="images/logo.png">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .cohort-section {
+      margin-bottom: 32px;
+    }
+    .cohort-header {
+      padding: 40px;
+      background: linear-gradient(135deg, rgba(46,16,101,0.3) 0%, rgba(10,10,20,0.8) 100%);
+      border-bottom: 1px solid rgba(139,92,246,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .cohort-header h3 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+    .cohort-header p {
+      color: var(--gray-500);
+    }
+    .cohort-body {
+      padding: 40px;
+    }
+    .cohort-body > p {
+      color: var(--gray-500);
+      margin-bottom: 32px;
+      line-height: 1.8;
+      font-size: 1.05rem;
+    }
+    .squad-label {
+      font-family: var(--font-display);
+      color: var(--white);
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .squad-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .squad-member {
+      text-align: center;
+      padding: 24px;
+      background: var(--black);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(139,92,246,0.06);
+      transition: var(--transition-base);
+    }
+    .squad-member:hover {
+      border-color: rgba(139,92,246,0.12);
+      transform: translateY(-2px);
+    }
+    .squad-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--white);
+      border: 3px solid rgba(139,92,246,0.15);
+    }
+    .squad-name {
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .squad-role {
+      font-size: 0.8rem;
+      color: var(--purple-bright);
+    }
+    .achievement-box {
+      margin-top: 32px;
+      padding: 24px;
+      background: rgba(245,158,11,0.03);
+      border: 1px solid rgba(245,158,11,0.08);
+      border-radius: var(--radius-md);
+    }
+    .achievement-box strong {
+      color: var(--gold-bright);
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .achievement-box p {
+      color: var(--gray-500);
+      font-size: 0.9rem;
+    }
+    .tba-notice {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--gray-500);
+      font-size: 0.95rem;
+      border: 1px dashed rgba(139,92,246,0.1);
+      border-radius: var(--radius-md);
+      background: rgba(10,10,20,0.4);
+    }
+    .tba-notice p {
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+  </style>
 </head>
 <body>
   <div class="cursor-glow" id="cursor-glow"></div>
 
   <nav class="navbar">
     <div class="container">
-      <a href="index.html" class="logo">DESCO<span>2.0</span></a>
+      <a href="index.html" class="logo">
+        <img src="images/logo.png" alt="DESCO" style="height: 36px; width: auto; border-radius: 6px;">
+        <span style="margin-left: 8px;">2.0</span>
+      </a>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
         <li><a href="about.html">About</a></li>
@@ -22,7 +142,9 @@
         <li><a href="contact.html">Contact</a></li>
         <li><a href="register.html" class="nav-cta">Register</a></li>
       </ul>
-      <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open');document.querySelector('.nav-overlay').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+      <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open');document.querySelector('.nav-overlay').classList.toggle('open')" aria-label="Toggle menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
     </div>
     <div class="nav-overlay" onclick="document.querySelector('.nav-links').classList.remove('open');document.querySelector('.nav-overlay').classList.remove('open')"></div>
   </nav>
@@ -38,76 +160,141 @@
   <section class="section" style="padding-top: 60px;">
     <div class="container">
       <!-- Biology -->
-      <div class="card-premium reveal" style="background: var(--black-card); border-radius: var(--radius-xl); overflow: hidden; margin-bottom: 32px;">
-        <div style="padding: 40px; background: linear-gradient(135deg, rgba(46,16,101,0.3) 0%, rgba(10,10,20,0.8) 100%); border-bottom: 1px solid rgba(139,92,246,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+      <div class="card-premium reveal cohort-section">
+        <div class="cohort-header">
           <div>
-            <h3 style="font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--white); margin-bottom: 8px;">🧬 Biology Cohort</h3>
-            <p style="color: var(--gray-500);">Defending Champions · Life Sciences Division</p>
+            <h3>Biology Cohort</h3>
+            <p>Defending Champions · Life Sciences Division</p>
           </div>
-          <span class="cohort-status defending" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; padding: 6px 16px; border-radius: var(--radius-full); background: rgba(245,158,11,0.06); color: var(--gold-bright); border: 1px solid rgba(245,158,11,0.12);">🏆 Defending Champions</span>
+          <span class="cohort-status defending">Defending Champions</span>
         </div>
-        <div style="padding: 40px;">
-          <p style="color: var(--gray-500); margin-bottom: 32px; line-height: 1.8; font-size: 1.05rem;">The reigning champions of DESCO 1.0 return with a target on their backs. Known for encyclopedic knowledge of life sciences, clinical precision under pressure, and unmatched team chemistry.</p>
-          <h4 style="font-family: var(--font-display); color: var(--white); margin-bottom: 20px; font-size: 1.1rem; font-weight: 700;">Squad</h4>
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px;">
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06); transition: var(--transition-base);">
-              <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">AN</div>
-              <div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">Adaobi N.</div>
-              <div style="font-size: 0.8rem; color: var(--purple-bright);">Captain</div>
-            </div>
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06);">
-              <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">CK</div>
-              <div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">Chinedu K.</div>
-              <div style="font-size: 0.8rem; color: var(--purple-bright);">Contestant</div>
-            </div>
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06);">
-              <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">FO</div>
-              <div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">Fatima O.</div>
-              <div style="font-size: 0.8rem; color: var(--purple-bright);">Contestant</div>
-            </div>
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06);">
-              <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">JA</div>
-              <div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">Jide A.</div>
-              <div style="font-size: 0.8rem; color: var(--purple-bright);">Contestant</div>
-            </div>
+        <div class="cohort-body">
+          <p>The reigning champions of DESCO 1.0 return with a target on their backs. Known for encyclopedic knowledge of life sciences, clinical precision under pressure, and unmatched team chemistry.</p>
+          <div class="tba-notice">
+            <p>Team representatives will be announced after the registration period closes. Check back soon or follow DESCO updates for the latest roster announcements.</p>
           </div>
-          <div style="margin-top: 32px; padding: 24px; background: rgba(245,158,11,0.03); border: 1px solid rgba(245,158,11,0.08); border-radius: var(--radius-md);">
-            <strong style="color: var(--gold-bright); display: block; margin-bottom: 8px; font-weight: 700;">🏆 Achievements</strong>
-            <p style="color: var(--gray-500); font-size: 0.9rem;">DESCO 1.0 Champions · Specialist Round Winners · Highest Aggregate Score Record</p>
+          <div class="achievement-box">
+            <strong>Achievements</strong>
+            <p>DESCO 1.0 Champions · Specialist Round Winners · Highest Aggregate Score Record</p>
           </div>
         </div>
       </div>
 
       <!-- Chemistry -->
-      <div class="card-premium reveal" style="background: var(--black-card); border-radius: var(--radius-xl); overflow: hidden; margin-bottom: 32px;">
-        <div style="padding: 40px; background: linear-gradient(135deg, rgba(46,16,101,0.2) 0%, rgba(10,10,20,0.8) 100%); border-bottom: 1px solid rgba(139,92,246,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-          <div><h3 style="font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--white); margin-bottom: 8px;">⚗️ Chemistry Cohort</h3><p style="color: var(--gray-500);">The Reaction Masters · Physical Sciences Division</p></div>
-          <span class="cohort-status active" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; padding: 6px 16px; border-radius: var(--radius-full); background: rgba(16,185,129,0.06); color: var(--success); border: 1px solid rgba(16,185,129,0.12);">● Active</span>
+      <div class="card-premium reveal cohort-section">
+        <div class="cohort-header" style="background: linear-gradient(135deg, rgba(46,16,101,0.2) 0%, rgba(10,10,20,0.8) 100%);">
+          <div>
+            <h3>Chemistry Cohort</h3>
+            <p>The Reaction Masters · Physical Sciences Division</p>
+          </div>
+          <span class="cohort-status active">● Active</span>
         </div>
-        <div style="padding: 40px;">
-          <p style="color: var(--gray-500); margin-bottom: 32px; line-height: 1.8; font-size: 1.05rem;">A cohort built on precision and analytical rigor. The Chemistry department has retooled since DESCO 1.0, bringing in fresh tactical minds and a renewed hunger to dethrone Biology.</p>
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px;">
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06);"><div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">TO</div><div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">Tolu O.</div><div style="font-size: 0.8rem; color: var(--purple-bright);">Captain</div></div>
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06);"><div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">SN</div><div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">Simi N.</div><div style="font-size: 0.8rem; color: var(--purple-bright);">Contestant</div></div>
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06);"><div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">EA</div><div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">Emeka A.</div><div style="font-size: 0.8rem; color: var(--purple-bright);">Contestant</div></div>
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06);"><div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">BK</div><div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">Bola K.</div><div style="font-size: 0.8rem; color: var(--purple-bright);">Contestant</div></div>
+        <div class="cohort-body">
+          <p>A cohort built on precision and analytical rigor. The Chemistry department has retooled since DESCO 1.0, bringing in fresh tactical minds and a renewed hunger to dethrone Biology.</p>
+          <div class="tba-notice">
+            <p>Team representatives will be announced after the registration period closes. Check back soon or follow DESCO updates for the latest roster announcements.</p>
           </div>
         </div>
       </div>
 
       <!-- Physics -->
-      <div class="card-premium reveal" style="background: var(--black-card); border-radius: var(--radius-xl); overflow: hidden; margin-bottom: 32px;">
-        <div style="padding: 40px; background: linear-gradient(135deg, rgba(46,16,101,0.2) 0%, rgba(10,10,20,0.8) 100%); border-bottom: 1px solid rgba(139,92,246,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-          <div><h3 style="font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--white); margin-bottom: 8px;">⚡ Physics Cohort</h3><p style="color: var(--gray-500);">The Force · Physical Sciences Division</p></div>
-          <span class="cohort-status active" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; padding: 6px 16px; border-radius: var(--radius-full); background: rgba(16,185,129,0.06); color: var(--success); border: 1px solid rgba(16,185,129,0.12);">● Active</span>
+      <div class="card-premium reveal cohort-section">
+        <div class="cohort-header" style="background: linear-gradient(135deg, rgba(46,16,101,0.2) 0%, rgba(10,10,20,0.8) 100%);">
+          <div>
+            <h3>Physics Cohort</h3>
+            <p>The Force · Physical Sciences Division</p>
+          </div>
+          <span class="cohort-status active">● Active</span>
         </div>
-        <div style="padding: 40px;">
-          <p style="color: var(--gray-500); margin-bottom: 32px; line-height: 1.8; font-size: 1.05rem;">Harnessing the fundamental forces of the universe — and competitive academic spirit. The Physics cohort brings mathematical precision and conceptual depth to every round.</p>
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px;">
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06);"><div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">DI</div><div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">David I.</div><div style="font-size: 0.8rem; color: var(--purple-bright);">Captain</div></div>
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06);"><div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">RA</div><div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">Rita A.</div><div style="font-size: 0.8rem; color: var(--purple-bright);">Contestant</div></div>
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06);"><div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">SO</div><div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">Segun O.</div><div style="font-size: 0.8rem; color: var(--purple-bright);">Contestant</div></div>
-            <div style="text-align: center; padding: 24px; background: var(--black); border-radius: var(--radius-md); border: 1px solid rgba(139,92,246,0.06);"><div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--white); border: 3px solid rgba(139,92,246,0.15);">NM</div><div style="font-weight: 600; color: var(--white); margin-bottom: 4px;">Ngozi M.</div><div style="font-size: 0.8rem; color: var(--purple-bright);">Contestant</div></div>
+        <div class="cohort-body">
+          <p>Harnessing the fundamental forces of the universe — and competitive academic spirit. The Physics cohort brings mathematical precision and conceptual depth to every round.</p>
+          <div class="tba-notice">
+            <p>Team representatives will be announced after the registration period closes. Check back soon or follow DESCO updates for the latest roster announcements.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mathematics -->
+      <div class="card-premium reveal cohort-section">
+        <div class="cohort-header" style="background: linear-gradient(135deg, rgba(46,16,101,0.2) 0%, rgba(10,10,20,0.8) 100%);">
+          <div>
+            <h3>Mathematics Cohort</h3>
+            <p>The Calculated · Pure Sciences Division</p>
+          </div>
+          <span class="cohort-status active">● Active</span>
+        </div>
+        <div class="cohort-body">
+          <p>Where logic meets lightning speed. The Mathematics cohort thrives in the Puzzle & Logic Arena and brings unshakeable analytical foundations to every discipline they touch.</p>
+          <div class="tba-notice">
+            <p>Team representatives will be announced after the registration period closes. Check back soon or follow DESCO updates for the latest roster announcements.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Computer Science -->
+      <div class="card-premium reveal cohort-section">
+        <div class="cohort-header" style="background: linear-gradient(135deg, rgba(46,16,101,0.2) 0%, rgba(10,10,20,0.8) 100%);">
+          <div>
+            <h3>Computer Science Cohort</h3>
+            <p>The Algorithms · Technology Division</p>
+          </div>
+          <span class="cohort-status active">● Active</span>
+        </div>
+        <div class="cohort-body">
+          <p>New to the lineup but already a feared competitor. The Computer Science cohort combines computational thinking with rapid pattern recognition — a dangerous combination across all six rounds.</p>
+          <div class="tba-notice">
+            <p>Team representatives will be announced after the registration period closes. Check back soon or follow DESCO updates for the latest roster announcements.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Integrated Science -->
+      <div class="card-premium reveal cohort-section">
+        <div class="cohort-header" style="background: linear-gradient(135deg, rgba(46,16,101,0.2) 0%, rgba(10,10,20,0.8) 100%);">
+          <div>
+            <h3>Integrated Science Cohort</h3>
+            <p>The Generalists · Interdisciplinary Division</p>
+          </div>
+          <span class="cohort-status active">● Active</span>
+        </div>
+        <div class="cohort-body">
+          <p>Jack of all trades, master of cross-disciplinary warfare. The Integrated Science cohort's breadth across biology, chemistry, and physics makes them formidable in the Cross-Discipline Clash.</p>
+          <div class="tba-notice">
+            <p>Team representatives will be announced after the registration period closes. Check back soon or follow DESCO updates for the latest roster announcements.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Geography -->
+      <div class="card-premium reveal cohort-section">
+        <div class="cohort-header" style="background: linear-gradient(135deg, rgba(46,16,101,0.2) 0%, rgba(10,10,20,0.8) 100%);">
+          <div>
+            <h3>Geography Cohort</h3>
+            <p>The Navigators · Earth Sciences Division</p>
+          </div>
+          <span class="cohort-status active">● Active</span>
+        </div>
+        <div class="cohort-body">
+          <p>Mapping routes to victory with spatial intelligence and environmental mastery. The Geography cohort brings a unique analytical lens that confounds opponents expecting traditional science dominance.</p>
+          <div class="tba-notice">
+            <p>Team representatives will be announced after the registration period closes. Check back soon or follow DESCO updates for the latest roster announcements.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Human Kinetics -->
+      <div class="card-premium reveal cohort-section">
+        <div class="cohort-header" style="background: linear-gradient(135deg, rgba(46,16,101,0.2) 0%, rgba(10,10,20,0.8) 100%);">
+          <div>
+            <h3>Human Kinetics Cohort</h3>
+            <p>The Athletes · Applied Sciences Division</p>
+          </div>
+          <span class="cohort-status active">● Active</span>
+        </div>
+        <div class="cohort-body">
+          <p>Fast on their feet, sharper in mind. The Human Kinetics cohort brings competitive sports psychology, biomechanics knowledge, and relentless team energy to the showdown.</p>
+          <div class="tba-notice">
+            <p>Team representatives will be announced after the registration period closes. Check back soon or follow DESCO updates for the latest roster announcements.</p>
           </div>
         </div>
       </div>

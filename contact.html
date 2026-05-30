@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact — DESCO 2.0</title>
+  <meta name="description" content="Contact the DESCO 2.0 organizing team. Email, phone, and location details for ULSESA, University of Lagos.">
+  <meta property="og:title" content="Contact — DESCO 2.0">
+  <meta property="og:description" content="Reach out to the DESCO 2.0 organizing team.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/png" href="images/logo.png">
   <link rel="stylesheet" href="css/style.css">
   <style>
     .floating-label { position: relative; margin-bottom: 28px; }
@@ -32,6 +37,40 @@
       top: 0; font-size: 0.75rem; color: var(--purple-glow); font-weight: 700; background: var(--black);
     }
     .floating-label input::placeholder, .floating-label textarea::placeholder { color: transparent; }
+    .contact-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: rgba(139,92,246,0.06);
+      border: 1px solid rgba(139,92,246,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: var(--transition-base);
+    }
+    .contact-icon-box svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--purple-bright);
+      stroke-width: 2;
+      fill: none;
+    }
+    .contact-item:hover .contact-icon-box {
+      background: linear-gradient(135deg, var(--purple), var(--purple-bright));
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(109,40,217,0.3);
+    }
+    .contact-item:hover .contact-icon-box svg {
+      stroke: var(--white);
+    }
+    .follow-title {
+      font-family: var(--font-display);
+      color: var(--white);
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -39,7 +78,10 @@
 
   <nav class="navbar">
     <div class="container">
-      <a href="index.html" class="logo">DESCO<span>2.0</span></a>
+      <a href="index.html" class="logo">
+        <img src="images/logo.png" alt="DESCO" style="height: 36px; width: auto; border-radius: 6px;">
+        <span style="margin-left: 8px;">2.0</span>
+      </a>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
         <li><a href="about.html">About</a></li>
@@ -50,7 +92,9 @@
         <li><a href="contact.html" class="active">Contact</a></li>
         <li><a href="register.html" class="nav-cta">Register</a></li>
       </ul>
-      <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open');document.querySelector('.nav-overlay').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+      <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open');document.querySelector('.nav-overlay').classList.toggle('open')" aria-label="Toggle menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
     </div>
     <div class="nav-overlay" onclick="document.querySelector('.nav-links').classList.remove('open');document.querySelector('.nav-overlay').classList.remove('open')"></div>
   </nav>
@@ -72,47 +116,55 @@
           <p style="color: var(--gray-500); margin-bottom: 40px; line-height: 1.8; font-size: 1.05rem;">Whether you're a prospective contestant, sponsor, media partner, or just curious about DESCO 2.0, we'd love to hear from you.</p>
 
           <div class="contact-item">
-            <div class="contact-icon">📧</div>
+            <div class="contact-icon-box">
+              <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </div>
             <div>
-              <strong style="color: var(--white); display: block; margin-bottom: 6px; font-weight: 600;">Email</strong>
+              <strong style="display: block; color: var(--white); margin-bottom: 6px; font-weight: 600; font-size: 0.95rem;">Email</strong>
               <p><a href="mailto:desco@ulsesa.unilag.edu.ng" style="color: var(--gray-500); text-decoration: none; transition: var(--transition-fast);">desco@ulsesa.unilag.edu.ng</a></p>
               <p><a href="mailto:ulsesa@unilag.edu.ng" style="color: var(--gray-500); text-decoration: none; transition: var(--transition-fast);">ulsesa@unilag.edu.ng</a></p>
             </div>
           </div>
 
           <div class="contact-item">
-            <div class="contact-icon">📱</div>
+            <div class="contact-icon-box">
+              <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
             <div>
-              <strong style="color: var(--white); display: block; margin-bottom: 6px; font-weight: 600;">Phone</strong>
+              <strong style="display: block; color: var(--white); margin-bottom: 6px; font-weight: 600; font-size: 0.95rem;">Phone</strong>
               <p><a href="tel:+2348012345678" style="color: var(--gray-500); text-decoration: none;">+234 801 234 5678</a></p>
               <p><a href="tel:+2348098765432" style="color: var(--gray-500); text-decoration: none;">+234 809 876 5432</a></p>
             </div>
           </div>
 
           <div class="contact-item">
-            <div class="contact-icon">📍</div>
+            <div class="contact-icon-box">
+              <svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
             <div>
-              <strong style="color: var(--white); display: block; margin-bottom: 6px; font-weight: 600;">Location</strong>
+              <strong style="display: block; color: var(--white); margin-bottom: 6px; font-weight: 600; font-size: 0.95rem;">Location</strong>
               <p style="color: var(--gray-500);">Science Education Department<br>Faculty of Education, University of Lagos<br>Akoka, Lagos, Nigeria</p>
             </div>
           </div>
 
           <div class="contact-item">
-            <div class="contact-icon">🕐</div>
+            <div class="contact-icon-box">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
             <div>
-              <strong style="color: var(--white); display: block; margin-bottom: 6px; font-weight: 600;">Office Hours</strong>
+              <strong style="display: block; color: var(--white); margin-bottom: 6px; font-weight: 600; font-size: 0.95rem;">Office Hours</strong>
               <p style="color: var(--gray-500);">Monday — Friday: 9:00 AM — 5:00 PM<br>Event Day: 7:00 AM — 8:00 PM</p>
             </div>
           </div>
 
           <div style="margin-top: 40px;">
-            <h4 style="font-family: var(--font-display); color: var(--white); margin-bottom: 20px; font-size: 1.1rem; font-weight: 700;">Follow DESCO</h4>
+            <h4 class="follow-title">Follow DESCO</h4>
             <div class="footer-social">
-              <a href="#" class="social-link" aria-label="Twitter">𝕏</a>
-              <a href="#" class="social-link" aria-label="Instagram">IG</a>
-              <a href="#" class="social-link" aria-label="LinkedIn">in</a>
-              <a href="#" class="social-link" aria-label="YouTube">YT</a>
-              <a href="#" class="social-link" aria-label="TikTok">♪</a>
+              <a href="#" class="social-link" aria-label="Twitter" style="font-size: 0.85rem; font-weight: 700;">𝕏</a>
+              <a href="https://www.instagram.com/ulsesa01/" target="_blank" rel="noopener" class="social-link" aria-label="Instagram" style="font-size: 0.85rem; font-weight: 700;">IG</a>
+              <a href="#" class="social-link" aria-label="LinkedIn" style="font-size: 0.85rem; font-weight: 700;">in</a>
+              <a href="#" class="social-link" aria-label="YouTube" style="font-size: 0.85rem; font-weight: 700;">YT</a>
+              <a href="#" class="social-link" aria-label="TikTok" style="font-size: 0.85rem; font-weight: 700;">♪</a>
             </div>
           </div>
         </div>
