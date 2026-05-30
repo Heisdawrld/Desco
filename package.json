@@ -1,24 +1,16 @@
 {
-  "name": "desco-2.0",
-  "version": "2.0.0",
-  "description": "DESCO 2.0 — The Ultimate Academic & Intellectual Showdown",
-  "main": "server.js",
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "db:setup": "node -e \"const {initDb} = require('./api/app'); initDb()\""
+    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
-  "dependencies": {
-    "@libsql/client": "^0.14.0",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.3",
-    "multer": "^1.4.5-lts.1",
-    "serverless-http": "^3.2.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.8.3",
+    "typescript": "~5.9.3"
   }
 }

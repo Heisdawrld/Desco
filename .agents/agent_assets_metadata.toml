@@ -1,0 +1,25 @@
+uploads = []
+
+[[generated]]
+id = "vx4FfazGheLsTB-i9i9Fg"
+uri = "file://artifacts/desco/public/images/hero-bg.png"
+type = "image"
+title = "Epic dark particle background"
+
+[[generated]]
+id = "VxFDp45Azq-_xwqf6XZX6"
+uri = "file://artifacts/desco/public/images/competition-stage.png"
+type = "image"
+title = "Academic competition stage"
+
+[[outputs]]
+id = "H8dh_II71aSSoQ_5xSRYc"
+uri = "file://DESCO2.tar.gz"
+type = "unspecified"
+title = "DESCO 2.0 — Full Project (tar.gz)"
+
+[[outputs]]
+id = "B_5jK47FeM5q72mIONHKU"
+uri = "file://DESCO2.zip"
+type = "unspecified"
+title = "DESCO 2.0 — Full Project (ZIP)"

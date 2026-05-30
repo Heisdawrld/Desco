@@ -1,14 +1,9 @@
 [build]
-  functions = "netlify/functions"
-  publish = "."
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api"
-  status = 200
+  base = "artifacts/desco"
+  command = "npm install -g pnpm && pnpm install && pnpm run build"
+  publish = "dist"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  force = false
