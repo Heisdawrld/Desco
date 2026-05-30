@@ -96,11 +96,11 @@
         <li><a href="contact.html">Contact</a></li>
         <li><a href="register.html" class="nav-cta">Register</a></li>
       </ul>
-      <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open');document.querySelector('.nav-overlay').classList.toggle('open')" aria-label="Toggle menu">
+      <button class="mobile-menu-btn" aria-label="Toggle menu">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
     </div>
-    <div class="nav-overlay" onclick="document.querySelector('.nav-links').classList.remove('open');document.querySelector('.nav-overlay').classList.remove('open')"></div>
+    <div class="nav-overlay"></div>
   </nav>
 
   <header class="page-header">
@@ -125,11 +125,15 @@
           <p style="color: var(--gray-500); margin-bottom: 40px; font-size: 0.95rem;">Prove your worth. Dominate or don't show up.</p>
           <form id="contestant-form">
             <div class="floating-label">
-              <input type="text" id="cf-name" placeholder="Full Name" required>
+              <input type="text" id="cf-name" name="full_name" placeholder="Full Name" required>
               <label for="cf-name">Full Name <span style="color: var(--danger);">*</span></label>
             </div>
             <div class="floating-label">
-              <select id="cf-dept" required>
+              <input type="text" id="cf-matric" name="matric_number" placeholder="Matric Number" required>
+              <label for="cf-matric">Matric Number <span style="color: var(--danger);">*</span></label>
+            </div>
+            <div class="floating-label">
+              <select id="cf-dept" name="department" required>
                 <option value="" disabled selected></option>
                 <option>Biology</option>
                 <option>Chemistry</option>
@@ -143,7 +147,7 @@
               <label for="cf-dept">Department <span style="color: var(--danger);">*</span></label>
             </div>
             <div class="floating-label">
-              <select id="cf-level" required>
+              <select id="cf-level" name="level" required>
                 <option value="" disabled selected></option>
                 <option>100 Level</option>
                 <option>200 Level</option>
@@ -154,11 +158,11 @@
               <label for="cf-level">Level <span style="color: var(--danger);">*</span></label>
             </div>
             <div class="floating-label">
-              <input type="tel" id="cf-phone" placeholder="Phone" required>
+              <input type="tel" id="cf-phone" name="phone" placeholder="Phone" required>
               <label for="cf-phone">Phone Number <span style="color: var(--danger);">*</span></label>
             </div>
             <div class="floating-label">
-              <input type="email" id="cf-email" placeholder="Email" required>
+              <input type="email" id="cf-email" name="email" placeholder="Email" required>
               <label for="cf-email">Email Address <span style="color: var(--danger);">*</span></label>
             </div>
             <div class="form-group" style="margin-bottom: 36px;">
@@ -183,15 +187,15 @@
           <p style="color: var(--gray-500); margin-bottom: 40px; font-size: 0.95rem;">Be part of the energy. Witness the showdown live.</p>
           <form id="audience-form">
             <div class="floating-label">
-              <input type="text" id="af-name" placeholder="Full Name" required>
+              <input type="text" id="af-name" name="full_name" placeholder="Full Name" required>
               <label for="af-name">Full Name <span style="color: var(--danger);">*</span></label>
             </div>
             <div class="floating-label">
-              <input type="text" id="af-dept" placeholder="Department" required>
+              <input type="text" id="af-dept" name="department" placeholder="Department" required>
               <label for="af-dept">Department <span style="color: var(--danger);">*</span></label>
             </div>
             <div class="floating-label">
-              <select id="af-level" required>
+              <select id="af-level" name="level" required>
                 <option value="" disabled selected></option>
                 <option>100 Level</option>
                 <option>200 Level</option>
@@ -202,11 +206,11 @@
               <label for="af-level">Level <span style="color: var(--danger);">*</span></label>
             </div>
             <div class="floating-label">
-              <input type="tel" id="af-phone" placeholder="Phone" required>
+              <input type="tel" id="af-phone" name="phone" placeholder="Phone" required>
               <label for="af-phone">Phone Number <span style="color: var(--danger);">*</span></label>
             </div>
             <div class="floating-label">
-              <input type="email" id="af-email" placeholder="Email" required>
+              <input type="email" id="af-email" name="email" placeholder="Email" required>
               <label for="af-email">Email Address <span style="color: var(--danger);">*</span></label>
             </div>
             <button type="submit" class="btn btn-primary btn-full">Reserve My Seat →</button>

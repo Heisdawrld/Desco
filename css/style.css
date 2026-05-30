@@ -2387,6 +2387,100 @@ select.form-control {
 }
 
 /* ========================================
+   TABS
+   ======================================== */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ========================================
+   TOAST NOTIFICATIONS
+   ======================================== */
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--black-card);
+  border: 1px solid rgba(139,92,246,0.12);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(0,0,0,0.4);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--white-soft);
+  max-width: 380px;
+  transform: translateX(120%);
+  transition: transform 0.4s var(--ease-out-expo), opacity 0.3s;
+  opacity: 0;
+  pointer-events: auto;
+}
+
+.toast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.toast-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toast-success .toast-icon {
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.2);
+  color: var(--success);
+}
+
+.toast-error .toast-icon {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.2);
+  color: var(--danger);
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--gray-500);
+  cursor: pointer;
+  margin-left: auto;
+  padding: 4px;
+  line-height: 1;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+}
+
+.toast-close:hover {
+  color: var(--white);
+}
+
+@media (max-width: 640px) {
+  .toast-container {
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    align-items: stretch;
+  }
+  .toast {
+    max-width: 100%;
+  }
+}
+
+/* ========================================
    PARTICLE CANVAS
    ======================================== */
 #particles-canvas {

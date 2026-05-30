@@ -9,6 +9,32 @@
   const API_BASE = '';
 
   // ===========================
+  // TOAST NOTIFICATIONS
+  // ===========================
+  const toastContainer = document.createElement('div');
+  toastContainer.className = 'toast-container';
+  document.body.appendChild(toastContainer);
+
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    const icon = type === 'success'
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    toast.innerHTML = `
+      <div class="toast-icon">${icon}</div>
+      <span>${message}</span>
+      <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    toastContainer.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 350);
+    }, 4500);
+  }
+
+  // ===========================
   // CURSOR GLOW (desktop only)
   // ===========================
   (function initCursorGlow() {
@@ -214,13 +240,13 @@
         });
         const data = await res.json();
         if (data.success) {
-          alert('Registration submitted! Confirmation email coming shortly.');
+          showToast('Registration submitted! Confirmation email coming shortly.');
           contestantForm.reset();
           const ut = document.querySelector('.file-upload-text');
           if (ut) ut.textContent = 'Click to upload or drag & drop your passport photo';
-        } else { alert('Error: ' + (data.error || 'Something went wrong')); }
+        } else { showToast('Error: ' + (data.error || 'Something went wrong'), 'error'); }
       } catch (err) {
-        alert('Network issue — please try again.');
+        showToast('Network issue — please try again.', 'error');
       }
       btn.innerHTML = orig; btn.disabled = false;
     });
@@ -241,11 +267,11 @@
         });
         const data = await res.json();
         if (data.success) {
-          alert('Seat reserved! Confirmation email coming shortly.');
+          showToast('Seat reserved! Confirmation email coming shortly.');
           audienceForm.reset();
-        } else { alert('Error: ' + (data.error || 'Something went wrong')); }
+        } else { showToast('Error: ' + (data.error || 'Something went wrong'), 'error'); }
       } catch (err) {
-        alert('Network issue — please try again.');
+        showToast('Network issue — please try again.', 'error');
       }
       btn.innerHTML = orig; btn.disabled = false;
     });
@@ -268,9 +294,9 @@
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj)
         });
         const data = await res.json();
-        if (data.success) { alert('Message sent! We will reply within 24 hours.'); contactForm.reset(); }
-        else { alert('Error: ' + (data.error || 'Something went wrong')); }
-      } catch (err) { alert('Network issue — please try again.'); }
+        if (data.success) { showToast('Message sent! We will reply within 24 hours.'); contactForm.reset(); }
+        else { showToast('Error: ' + (data.error || 'Something went wrong'), 'error'); }
+      } catch (err) { showToast('Network issue — please try again.', 'error'); }
       btn.innerHTML = orig; btn.disabled = false;
     });
   }
