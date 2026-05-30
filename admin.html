@@ -6,159 +6,54 @@
   <title>Admin Control Room — DESCO 2.0</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* Admin-specific overrides */
     .admin-body { background: var(--black); min-height: 100vh; }
-    .login-screen {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      background:
-        radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.12) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 50%, rgba(168,85,247,0.08) 0%, transparent 50%);
-    }
-    .login-card {
-      width: 100%; max-width: 420px; padding: 48px;
-      background: rgba(18,18,31,0.9); border: 1px solid rgba(139,92,246,0.25);
-      border-radius: 20px; backdrop-filter: blur(24px);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(124,58,237,0.1);
-    }
-    .login-card h2 {
-      font-family: var(--font-display); font-size: 1.8rem; color: var(--white);
-      margin-bottom: 8px; text-align: center;
-    }
-    .login-card p { color: var(--gray); text-align: center; margin-bottom: 32px; font-size: 0.95rem; }
-    .login-error {
-      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
-      color: #fca5a5; padding: 12px 16px; border-radius: 10px; font-size: 0.9rem;
-      margin-bottom: 20px; display: none;
-    }
-    .admin-layout { display: flex; min-height: 100vh; }
-    .admin-sidebar {
-      width: 260px; background: rgba(10,10,18,0.95); border-right: 1px solid rgba(139,92,246,0.12);
-      padding: 32px 20px; position: fixed; inset: 0 auto 0 0; z-index: 100;
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .admin-sidebar .logo { margin-bottom: 40px; justify-content: center; }
-    .nav-item {
-      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-      border-radius: 10px; color: var(--gray); text-decoration: none; font-weight: 500;
-      cursor: pointer; transition: var(--transition); border: none; background: none; width: 100%; font-size: 0.95rem;
-    }
-    .nav-item:hover, .nav-item.active {
-      background: rgba(139,92,246,0.1); color: var(--white);
-    }
-    .nav-item.active { border-left: 3px solid var(--purple-light); }
-    .admin-main { flex: 1; margin-left: 260px; padding: 40px 32px 60px; }
-    .admin-header {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; flex-wrap: wrap; gap: 16px;
-    }
-    .admin-header h1 {
-      font-family: var(--font-display); font-size: 1.6rem; color: var(--white); font-weight: 700;
-    }
-    .admin-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25);
-      padding: 6px 14px; border-radius: 100px; font-size: 0.8rem; color: var(--purple-glow); font-weight: 600;
-    }
-    .admin-badge .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulseGlow 2s infinite; }
     .mobile-admin-toggle {
       display: none; position: fixed; top: 16px; left: 16px; z-index: 200;
-      background: var(--black-light); border: 1px solid rgba(139,92,246,0.3);
-      color: var(--white); width: 44px; height: 44px; border-radius: 10px; font-size: 1.3rem; cursor: pointer;
+      background: var(--black-card); border: 1px solid rgba(139,92,246,0.15);
+      color: var(--white); width: 44px; height: 44px; border-radius: var(--radius-sm);
+      font-size: 1.3rem; cursor: pointer; align-items: center; justify-content: center;
     }
-    .score-grid {
-      display: grid; grid-template-columns: 180px repeat(6, 1fr) 100px 80px; gap: 0;
-      border: 1px solid rgba(139,92,246,0.15); border-radius: 12px; overflow: hidden;
-      font-size: 0.9rem;
+    .section-view { display: none; }
+    .section-view.active { display: block; animation: fadeUp 0.4s var(--ease-out-expo); }
+    .photo-thumb {
+      width: 44px; height: 44px; border-radius: var(--radius-sm); object-fit: cover;
+      border: 2px solid rgba(139,92,246,0.15); cursor: pointer; transition: var(--transition-fast);
     }
-    .score-grid > div {
-      padding: 14px 12px; border-bottom: 1px solid rgba(139,92,246,0.1);
-      border-right: 1px solid rgba(139,92,246,0.05); display: flex; align-items: center;
-    }
-    .score-grid > div:nth-child(-n+9) { /* header */
-      background: rgba(18,18,31,0.8); font-weight: 600; color: var(--gray); font-size: 0.75rem;
-      text-transform: uppercase; letter-spacing: 1px;
-    }
-    .score-grid input {
-      width: 100%; background: transparent; border: 1px solid rgba(139,92,246,0.2);
-      border-radius: 6px; padding: 8px; color: var(--white); text-align: center; font-family: var(--font-primary);
-    }
-    .score-grid input:focus { outline: none; border-color: var(--purple-light); background: rgba(139,92,246,0.05); }
-    .score-total { font-family: var(--font-display); font-weight: 700; color: var(--purple-light); font-size: 1.05rem; }
-    .section-view { display: none; animation: fadeIn 0.4s ease; }
-    .section-view.active { display: block; }
-    .action-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
-    .status-pill { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
-    .status-pill.pending { background: rgba(251,191,36,0.1); color: var(--gold); border: 1px solid rgba(251,191,36,0.3); }
-    .status-pill.approved { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
-    .msg-card { padding: 20px; border-radius: 12px; background: rgba(18,18,31,0.6); border: 1px solid rgba(139,92,246,0.12); margin-bottom: 12px; }
-    .msg-card h4 { color: var(--white); font-size: 1rem; margin-bottom: 4px; }
-    .msg-card .meta { color: var(--gray); font-size: 0.8rem; margin-bottom: 10px; }
-    .msg-card p { color: var(--gray); font-size: 0.9rem; line-height: 1.6; }
-    @media (max-width: 1024px) {
-      .admin-sidebar { transform: translateX(-100%); transition: transform 0.3s; }
-      .admin-sidebar.open { transform: translateX(0); }
-      .admin-main { margin-left: 0; padding-top: 80px; }
-      .mobile-admin-toggle { display: flex; align-items: center; justify-content: center; }
-      .score-grid { grid-template-columns: 140px repeat(6, minmax(80px,1fr)) 90px 70px; font-size: 0.8rem; overflow-x: auto; }
-    }
-    @media (max-width: 768px) {
-      .admin-header h1 { font-size: 1.3rem; }
-      .login-card { padding: 32px 24px; margin: 16px; }
-      .score-grid { display: flex; flex-direction: column; gap: 12px; border: none; }
-      .score-grid > div:nth-child(-n+9) { display: none; }
-      .score-row-mobile {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-        background: rgba(18,18,31,0.6); border: 1px solid rgba(139,92,246,0.15);
-        border-radius: 12px; padding: 16px;
-      }
-    }
+    .photo-thumb:hover { border-color: var(--purple-bright); transform: scale(1.1); box-shadow: var(--shadow-glow-sm); }
   </style>
 </head>
 <body class="admin-body">
 
-  <!-- LOGIN SCREEN -->
   <div id="login-screen" class="login-screen">
     <div class="login-card">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <div style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; color: var(--white);">
-          DESCO<span style="color: var(--purple-light);">2.0</span>
-        </div>
-        <div style="font-size: 0.7rem; background: var(--purple); color: var(--white); padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; font-weight: 700; letter-spacing: 1px;">ADMIN CONTROL ROOM</div>
+      <div style="text-align: center; margin-bottom: 28px;">
+        <div style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; color: var(--white);">DESCO<span style="background: linear-gradient(135deg, var(--purple-bright), var(--cyan-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">2.0</span></div>
+        <div class="logo-badge" style="margin-top: 8px;">Admin Control Room</div>
       </div>
       <h2>Secure Access</h2>
       <p>Enter your administrator password to enter the control room.</p>
       <div id="login-error" class="login-error">Invalid password. Please try again.</div>
       <form id="login-form">
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="admin-password" class="form-control" placeholder="••••••••" required style="background: rgba(10,10,18,0.8);">
+        <div class="floating-label" style="margin-bottom: 24px;">
+          <input type="password" id="admin-password" placeholder="Password" required style="background: var(--black);">
+          <label for="admin-password">Password</label>
         </div>
-        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 8px;">Enter Control Room →</button>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 4px;">Enter Control Room →</button>
       </form>
     </div>
   </div>
 
-  <!-- DASHBOARD (hidden until auth) -->
   <div id="dashboard" style="display: none;">
     <button class="mobile-admin-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')">☰</button>
     <div class="admin-layout">
       <aside class="admin-sidebar" id="admin-sidebar">
-        <a href="index.html" class="logo" style="font-size: 1.6rem;">DESCO<span>2.0</span></a>
-        <button class="nav-item active" data-view="dash-view" onclick="switchView(this)">
-          <span>📊</span> Dashboard
-        </button>
-        <button class="nav-item" data-view="score-view" onclick="switchView(this)">
-          <span>🏆</span> Score Control
-        </button>
-        <button class="nav-item" data-view="reg-view" onclick="switchView(this)">
-          <span>📝</span> Registrations
-        </button>
-        <button class="nav-item" data-view="msg-view" onclick="switchView(this)">
-          <span>✉️</span> Messages
-        </button>
-        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(139,92,246,0.1);">
-          <button class="nav-item" onclick="logout()" style="color: var(--danger);">
-            <span>🚪</span> Logout
-          </button>
+        <a href="index.html" class="logo" style="font-size: 1.5rem; justify-content: center;">DESCO<span>2.0</span></a>
+        <button class="nav-item active" data-view="dash-view" onclick="switchView(this)"><span>📊</span> Dashboard</button>
+        <button class="nav-item" data-view="score-view" onclick="switchView(this)"><span>🏆</span> Score Control</button>
+        <button class="nav-item" data-view="reg-view" onclick="switchView(this)"><span>📝</span> Registrations</button>
+        <button class="nav-item" data-view="msg-view" onclick="switchView(this)"><span>✉️</span> Messages</button>
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(139,92,246,0.06);">
+          <button class="nav-item" onclick="logout()" style="color: var(--danger);"><span>🚪</span> Logout</button>
         </div>
       </aside>
 
@@ -168,7 +63,6 @@
           <div class="admin-badge"><div class="dot"></div> Control Room Active</div>
         </div>
 
-        <!-- DASHBOARD VIEW -->
         <div id="dash-view" class="section-view active">
           <div class="admin-stats">
             <div class="admin-card">
@@ -179,71 +73,64 @@
             <div class="admin-card">
               <h4>Audience</h4>
               <div class="value" id="stat-audience">—</div>
-              <div class="change" style="color: var(--purple-light);">Seats reserved</div>
+              <div class="change" style="color: var(--purple-glow);">Seats reserved</div>
             </div>
             <div class="admin-card">
-              <h4>Pending Approvals</h4>
+              <h4>Pending</h4>
               <div class="value" id="stat-pending">—</div>
-              <div class="change" style="color: var(--gold);">Awaiting review</div>
+              <div class="change" style="color: var(--gold-bright);">Awaiting review</div>
             </div>
             <div class="admin-card">
               <h4>Cohorts</h4>
               <div class="value" id="stat-cohorts">—</div>
-              <div class="change" style="color: var(--gray);">Active departments</div>
+              <div class="change" style="color: var(--gray-500);">Active departments</div>
             </div>
           </div>
 
-          <div style="margin-top: 40px;">
-            <h3 style="font-family: var(--font-display); color: var(--white); margin-bottom: 20px; font-size: 1.3rem;">Quick Actions</h3>
+          <div style="margin-top: 48px;">
+            <h3 style="font-family: var(--font-display); color: var(--white); margin-bottom: 24px; font-size: 1.3rem; font-weight: 700;">Quick Actions</h3>
             <div class="action-bar">
               <button class="btn btn-primary" onclick="switchViewById('score-view')">Update Scores</button>
               <button class="btn btn-secondary" onclick="switchViewById('reg-view')">Review Registrations</button>
-              <button class="btn btn-secondary" onclick="location.href='scoreboard.html'">Open Public Scoreboard</button>
+              <button class="btn btn-secondary" onclick="location.href='scoreboard.html'">Public Scoreboard</button>
               <button class="btn btn-secondary" onclick="location.href='index.html'">View Website</button>
             </div>
           </div>
 
-          <div style="margin-top: 40px;">
-            <h3 style="font-family: var(--font-display); color: var(--white); margin-bottom: 20px; font-size: 1.3rem;">Live Leaderboard Preview</h3>
+          <div style="margin-top: 48px;">
+            <h3 style="font-family: var(--font-display); color: var(--white); margin-bottom: 24px; font-size: 1.3rem; font-weight: 700;">Live Leaderboard</h3>
             <div class="leaderboard" id="dash-leaderboard" style="max-width: 100%;">
-              <div class="leaderboard-header" style="border-radius: 12px 12px 0 0;">
-                <div>Rank</div><div>Cohort</div><div>Score</div><div>Change</div>
-              </div>
+              <div class="leaderboard-header"><div>Rank</div><div>Cohort</div><div>Score</div><div>Change</div></div>
               <div id="dash-leaderboard-body"></div>
             </div>
           </div>
         </div>
 
-        <!-- SCORE CONTROL VIEW -->
         <div id="score-view" class="section-view">
           <div class="action-bar" style="justify-content: space-between; align-items: center;">
-            <h3 style="font-family: var(--font-display); color: var(--white); font-size: 1.2rem;">Score Matrix</h3>
+            <h3 style="font-family: var(--font-display); color: var(--white); font-size: 1.2rem; font-weight: 700;">Score Matrix</h3>
             <button class="btn btn-primary" onclick="saveScores()">💾 Save All Changes</button>
           </div>
           <div id="score-matrix" class="score-grid"></div>
-          <div id="score-save-feedback" style="margin-top: 16px; color: var(--success); font-weight: 600; display: none;">✅ Scores saved successfully!</div>
+          <div id="score-save-feedback" style="margin-top: 16px; color: var(--success); font-weight: 700; display: none;">✅ Scores saved successfully!</div>
         </div>
 
-        <!-- REGISTRATIONS VIEW -->
         <div id="reg-view" class="section-view">
           <div class="registration-tabs" style="margin-bottom: 24px;">
             <button class="tab-btn active" onclick="filterRegs('all', this)">All</button>
             <button class="tab-btn" onclick="filterRegs('Contestant', this)">Contestants</button>
             <button class="tab-btn" onclick="filterRegs('Audience', this)">Audience</button>
           </div>
-      <div class="admin-table-container">
-        <table class="admin-table" id="reg-table">
-          <thead>
-            <tr><th>Photo</th><th>Name</th><th>Type</th><th>Department</th><th>Level</th><th>Date</th><th>Status</th><th>Action</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
+          <div class="admin-table-container">
+            <table class="admin-table" id="reg-table">
+              <thead><tr><th>Photo</th><th>Name</th><th>Type</th><th>Department</th><th>Level</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- MESSAGES VIEW -->
         <div id="msg-view" class="section-view">
-          <h3 style="font-family: var(--font-display); color: var(--white); margin-bottom: 20px; font-size: 1.2rem;">Contact Messages</h3>
+          <h3 style="font-family: var(--font-display); color: var(--white); margin-bottom: 24px; font-size: 1.2rem; font-weight: 700;">Contact Messages</h3>
           <div id="messages-list"></div>
         </div>
       </main>
@@ -256,17 +143,14 @@
     let token = localStorage.getItem('desco_admin_token');
     let allRegistrations = [];
     let cohortList = [];
-
     const rounds = ['Academic Sprint','Cross-Discipline Clash','Specialist Round','Puzzle & Logic Arena','Buzzer War','Blackout Question'];
 
-    // ---------- AUTH ----------
     async function checkAuth() {
       if (!token) return showLogin();
       try {
         const r = await fetch(`${API_BASE}/api/admin/me`, { headers: { Authorization: 'Bearer '+token } });
         if (!r.ok) throw new Error('Unauthorized');
-        showDashboard();
-        loadDashboard();
+        showDashboard(); loadDashboard();
       } catch (e) { localStorage.removeItem('desco_admin_token'); token = null; showLogin(); }
     }
 
@@ -275,36 +159,19 @@
       const pw = document.getElementById('admin-password').value;
       const err = document.getElementById('login-error');
       try {
-        const r = await fetch(`${API_BASE}/api/admin/login`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: pw })
-        });
+        const r = await fetch(`${API_BASE}/api/admin/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
         const data = await r.json();
         if (data.success && data.token) {
-          token = data.token;
-          localStorage.setItem('desco_admin_token', token);
-          showDashboard();
-          loadDashboard();
-        } else {
-          err.style.display = 'block';
-        }
+          token = data.token; localStorage.setItem('desco_admin_token', token);
+          showDashboard(); loadDashboard();
+        } else { err.style.display = 'block'; }
       } catch (e) { err.style.display = 'block'; }
     });
 
-    function showLogin() {
-      document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('dashboard').style.display = 'none';
-    }
-    function showDashboard() {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-    }
-    function logout() {
-      localStorage.removeItem('desco_admin_token'); token = null;
-      showLogin();
-    }
+    function showLogin() { document.getElementById('login-screen').style.display = 'flex'; document.getElementById('dashboard').style.display = 'none'; }
+    function showDashboard() { document.getElementById('login-screen').style.display = 'none'; document.getElementById('dashboard').style.display = 'block'; }
+    function logout() { localStorage.removeItem('desco_admin_token'); token = null; showLogin(); }
 
-    // ---------- NAVIGATION ----------
     function switchView(el) {
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       el.classList.add('active');
@@ -317,65 +184,33 @@
       if (id === 'msg-view') loadMessages();
       document.querySelector('.admin-sidebar').classList.remove('open');
     }
-    function switchViewById(id) {
-      const btn = document.querySelector(`[data-view="${id}"]`);
-      if (btn) switchView(btn);
-    }
+    function switchViewById(id) { const btn = document.querySelector(`[data-view="${id}"]`); if (btn) switchView(btn); }
 
-    // ---------- DASHBOARD DATA ----------
     async function loadDashboard() {
-      try {
-        const s = await fetch(`${API_BASE}/api/stats`).then(r => r.json());
-        document.getElementById('stat-contestants').textContent = s.contestants ?? 0;
-        document.getElementById('stat-audience').textContent = s.audience ?? 0;
-        document.getElementById('stat-pending').textContent = s.pending ?? 0;
-        document.getElementById('stat-cohorts').textContent = s.cohorts ?? 0;
-      } catch (e) {}
-      // Load mini leaderboard
-      try {
-        const b = await fetch(`${API_BASE}/api/scoreboard`).then(r => r.json());
-        const body = document.getElementById('dash-leaderboard-body');
-        body.innerHTML = b.leaderboard.slice(0, 5).map((t,i) => {
-          const rc = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
-          return `
-            <div class="leaderboard-row">
-              <div class="rank ${rc}">${i+1}</div>
-              <div class="team-info"><div class="team-avatar">${t.icon||t.name.charAt(0)}</div><span class="team-name">${t.name}</span></div>
-              <div class="score">${t.total.toLocaleString()}</div>
-              <div class="score-change up">Live</div>
-            </div>`;
-        }).join('');
-      } catch (e) {}
+      try { const s = await fetch(`${API_BASE}/api/stats`).then(r => r.json()); document.getElementById('stat-contestants').textContent = s.contestants ?? 0; document.getElementById('stat-audience').textContent = s.audience ?? 0; document.getElementById('stat-pending').textContent = s.pending ?? 0; document.getElementById('stat-cohorts').textContent = s.cohorts ?? 0; } catch (e) {}
+      try { const b = await fetch(`${API_BASE}/api/scoreboard`).then(r => r.json()); const body = document.getElementById('dash-leaderboard-body'); body.innerHTML = b.leaderboard.slice(0,5).map((t,i) => { const rc = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''; return `<div class="leaderboard-row"><div class="rank ${rc}">${i+1}</div><div class="team-info"><div class="team-avatar">${t.name.charAt(0)}</div><span class="team-name">${t.name}</span></div><div class="score">${t.total.toLocaleString()}</div><div class="score-change up">Live</div></div>`; }).join(''); } catch (e) {}
     }
 
-    // ---------- SCORE MATRIX ----------
     async function loadScoreMatrix() {
       try {
         const b = await fetch(`${API_BASE}/api/scoreboard`).then(r => r.json());
         cohortList = b.leaderboard;
         const grid = document.getElementById('score-matrix');
         let html = '';
-        // Header
         const headers = ['Cohort', ...rounds, 'Total', ''];
         headers.forEach(h => html += `<div>${h}</div>`);
-        // Rows
         cohortList.forEach(c => {
-          html += `<div style="font-weight:600;color:var(--white);">${c.name}</div>`;
-          rounds.forEach(r => {
-            const val = c.rounds?.[r] ?? 0;
-            html += `<div><input type="number" data-cohort="${c.code}" data-round="${r}" value="${val}" min="0"></div>`;
-          });
+          html += `<div style="font-weight:700;color:var(--white);font-size:0.85rem;">${c.name}</div>`;
+          rounds.forEach(r => { const val = c.rounds?.[r] ?? 0; html += `<div><input type="number" data-cohort="${c.code}" data-round="${r}" value="${val}" min="0"></div>`; });
           html += `<div class="score-total" id="tot-${c.code}">${c.total.toLocaleString()}</div>`;
-          html += `<div><button class="btn btn-primary" style="padding:6px 14px;font-size:0.8rem;" onclick="saveOneRow('${c.code}')">Save</button></div>`;
+          html += `<div><button class="btn btn-primary" style="padding:6px 14px;font-size:0.75rem;" onclick="saveOneRow('${c.code}')">Save</button></div>`;
         });
         grid.innerHTML = html;
-        // Auto-update totals on input
         grid.querySelectorAll('input').forEach(inp => {
           inp.addEventListener('input', () => {
             const code = inp.dataset.cohort;
             const inputs = grid.querySelectorAll(`input[data-cohort="${code}"]`);
-            let sum = 0;
-            inputs.forEach(i => sum += parseInt(i.value || 0));
+            let sum = 0; inputs.forEach(i => sum += parseInt(i.value || 0));
             const totEl = document.getElementById(`tot-${code}`);
             if (totEl) totEl.textContent = sum.toLocaleString();
           });
@@ -386,9 +221,7 @@
     async function saveScores() {
       const inputs = document.querySelectorAll('#score-matrix input');
       const updates = [];
-      inputs.forEach(inp => {
-        updates.push({ cohort_code: inp.dataset.cohort, round_name: inp.dataset.round, points: parseInt(inp.value || 0) });
-      });
+      inputs.forEach(inp => updates.push({ cohort_code: inp.dataset.cohort, round_name: inp.dataset.round, points: parseInt(inp.value || 0) }));
       await pushScores(updates);
     }
     async function saveOneRow(code) {
@@ -399,20 +232,12 @@
     }
     async function pushScores(updates) {
       try {
-        const r = await fetch(`${API_BASE}/api/scoreboard/bulk`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer '+token },
-          body: JSON.stringify(updates)
-        });
+        const r = await fetch(`${API_BASE}/api/scoreboard/bulk`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer '+token }, body: JSON.stringify(updates) });
         const d = await r.json();
-        if (d.success) {
-          const fb = document.getElementById('score-save-feedback');
-          fb.style.display = 'block'; setTimeout(() => fb.style.display = 'none', 3000);
-          loadDashboard();
-        }
-      } catch (e) { alert('Save failed. Check token/auth.'); }
+        if (d.success) { const fb = document.getElementById('score-save-feedback'); fb.style.display = 'block'; setTimeout(() => fb.style.display = 'none', 3000); loadDashboard(); }
+      } catch (e) { alert('Save failed. Check auth.'); }
     }
 
-    // ---------- REGISTRATIONS ----------
     async function loadRegistrations() {
       try {
         const r = await fetch(`${API_BASE}/api/registrations`, { headers: { Authorization: 'Bearer '+token } });
@@ -423,23 +248,13 @@
     }
     function renderRegTable(list) {
       const tbody = document.querySelector('#reg-table tbody');
-      tbody.innerHTML = list.slice(0, 50).map(x => {
+      tbody.innerHTML = list.slice(0,50).map(x => {
         const date = new Date(x.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
         const st = x.status === 'approved' ? 'approved' : 'pending';
         const next = x.status === 'approved' ? 'pending' : 'approved';
         const btnText = x.status === 'approved' ? 'Revoke' : 'Approve';
-        const photo = x.passport_base64 ? `<img src="${x.passport_base64}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(139,92,246,0.3);">` : `<div style="width:40px;height:40px;border-radius:50%;background:rgba(139,92,246,0.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">👤</div>`;
-        return `
-          <tr>
-            <td>${photo}</td>
-            <td style="font-weight:600;">${x.full_name}</td>
-            <td>${x.type}</td>
-            <td>${x.department}</td>
-            <td>${x.level}</td>
-            <td>${date}</td>
-            <td><span class="status-pill ${st}">${x.status}</span></td>
-            <td><button class="btn btn-secondary" style="padding:6px 14px;font-size:0.8rem;" onclick="toggleReg(${x.id},'${x.type}','${next}')">${btnText}</button></td>
-          </tr>`;
+        const photo = x.passport_base64 ? `<img src="${x.passport_base64}" class="photo-thumb" onclick="window.open('${x.passport_base64}')" title="Click to view">` : `<div style="width:44px;height:44px;border-radius:var(--radius-sm);background:rgba(139,92,246,0.08);display:flex;align-items:center;justify-content:center;font-size:1.2rem;border:2px solid rgba(139,92,246,0.1);">👤</div>`;
+        return `<tr><td>${photo}</td><td style="font-weight:600;">${x.full_name}</td><td>${x.type}</td><td>${x.department}</td><td>${x.level}</td><td>${date}</td><td><span class="status-badge ${st}">${x.status}</span></td><td><button class="btn btn-secondary" style="padding:6px 14px;font-size:0.8rem;" onclick="toggleReg(${x.id},'${x.type}','${next}')">${btnText}</button></td></tr>`;
       }).join('');
     }
     function filterRegs(type, btn) {
@@ -449,48 +264,22 @@
       else renderRegTable(allRegistrations.filter(r => r.type === type));
     }
     async function toggleReg(id, type, status) {
-      try {
-        await fetch(`${API_BASE}/api/registrations/${id}/status`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer '+token },
-          body: JSON.stringify({ type, status })
-        });
-        loadRegistrations();
-        loadDashboard();
-      } catch (e) { alert('Action failed'); }
+      try { await fetch(`${API_BASE}/api/registrations/${id}/status`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer '+token }, body: JSON.stringify({ type, status }) }); loadRegistrations(); loadDashboard(); } catch (e) { alert('Action failed'); }
     }
 
-    // ---------- MESSAGES ----------
     async function loadMessages() {
       try {
         const r = await fetch(`${API_BASE}/api/contacts`, { headers: { Authorization: 'Bearer '+token } });
         const d = await r.json();
         const box = document.getElementById('messages-list');
-        if (!d.contacts?.length) { box.innerHTML = '<p style="color:var(--gray)">No messages yet.</p>'; return; }
-        box.innerHTML = d.contacts.map(m => `
-          <div class="msg-card">
-            <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:12px;">
-              <div>
-                <h4>${m.name} <span style="color:var(--purple-light);font-size:0.85rem;">(${m.email})</span></h4>
-                <div class="meta">${m.subject} · ${new Date(m.created_at).toLocaleString()}</div>
-              </div>
-              <button class="btn btn-secondary" style="padding:6px 14px;font-size:0.8rem;" onclick="deleteMsg(${m.id})">🗑 Delete</button>
-            </div>
-            <p>${m.message}</p>
-          </div>
-        `).join('');
+        if (!d.contacts?.length) { box.innerHTML = '<p style="color:var(--gray-500)">No messages yet.</p>'; return; }
+        box.innerHTML = d.contacts.map(m => `<div class="msg-card"><div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:12px;"><div><h4>${m.name} <span style="color:var(--purple-glow);font-size:0.85rem;">(${m.email})</span></h4><div class="meta">${m.subject} · ${new Date(m.created_at).toLocaleString()}</div></div><button class="btn btn-secondary" style="padding:6px 14px;font-size:0.8rem;" onclick="deleteMsg(${m.id})">🗑 Delete</button></div><p>${m.message}</p></div>`).join('');
       } catch (e) { console.error(e); }
     }
     async function deleteMsg(id) {
       if (!confirm('Delete this message?')) return;
-      try {
-        await fetch(`${API_BASE}/api/contacts/${id}`, {
-          method: 'DELETE', headers: { Authorization: 'Bearer '+token }
-        });
-        loadMessages();
-      } catch (e) { alert('Delete failed'); }
+      try { await fetch(`${API_BASE}/api/contacts/${id}`, { method: 'DELETE', headers: { Authorization: 'Bearer '+token } }); loadMessages(); } catch (e) { alert('Delete failed'); }
     }
-
-    // Init
     checkAuth();
   </script>
 </body>
