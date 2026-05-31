@@ -5,14 +5,11 @@ import { Layout } from "@/components/layout";
 import { ArrowRight, Zap, Trophy, Users, Clock } from "lucide-react";
 
 const COHORTS = [
-  { name: "Biology", desc: "Defending Champions. The ones to beat.", status: "champion", color: "from-yellow-500/20 to-amber-500/10" },
-  { name: "Chemistry", desc: "Precision, reactions, and pure intellect.", status: "active", color: "from-purple-500/20 to-violet-500/10" },
-  { name: "Physics", desc: "Harnessing the forces of knowledge.", status: "active", color: "from-cyan-500/20 to-blue-500/10" },
-  { name: "Mathematics", desc: "Numbers don't lie. Neither do they.", status: "active", color: "from-indigo-500/20 to-purple-500/10" },
-  { name: "Computer Science", desc: "Coding their way to the throne.", status: "active", color: "from-green-500/20 to-emerald-500/10" },
+  { name: "Biology Education", desc: "Defending Champions. The ones to beat.", status: "champion", color: "from-yellow-500/20 to-amber-500/10" },
+  { name: "Chemistry Education", desc: "Precision, reactions, and pure intellect.", status: "active", color: "from-purple-500/20 to-violet-500/10" },
+  { name: "Physics Education", desc: "Harnessing the forces of knowledge.", status: "active", color: "from-cyan-500/20 to-blue-500/10" },
+  { name: "Mathematics Education", desc: "Numbers don't lie. Neither do they.", status: "active", color: "from-indigo-500/20 to-purple-500/10" },
   { name: "Integrated Science", desc: "Versatility across all disciplines.", status: "active", color: "from-pink-500/20 to-rose-500/10" },
-  { name: "Geography", desc: "Mapping their route to victory.", status: "active", color: "from-orange-500/20 to-amber-500/10" },
-  { name: "Human Kinetics", desc: "Fast on their feet, sharper in mind.", status: "active", color: "from-red-500/20 to-rose-500/10" },
 ];
 
 const ROUNDS = [
@@ -242,7 +239,7 @@ export default function Home() {
       <section className="py-16 border-y border-white/5 bg-background/50">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-3 gap-8 md:gap-16">
-            <StatCard num="8" label="Cohorts" delay={0} />
+            <StatCard num="5" label="Cohorts" delay={0} />
             <StatCard num="6" label="Rounds" delay={0.1} />
             <StatCard num="1" label="Champion" delay={0.2} />
           </div>
@@ -264,10 +261,10 @@ export default function Home() {
                 Where Intellect, Speed, Strategy &amp; Excellence Collide
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed mb-4">
-                DESCO (Departmental Showdown Competition) is the premier intellectual battleground for Science Education students at the University of Lagos. DESCO 2.0 raises the stakes higher than ever before.
+                DESCO (Cohort Showdown Competition) is the premier intellectual battleground for Science Education students at the University of Lagos. DESCO 2.0 raises the stakes higher than ever before.
               </p>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Six rigorous rounds. Eight cohorts. One champion. This isn't just a quiz — it's the ultimate test of knowledge and teamwork where only the sharpest survive.
+                Six rigorous rounds. Five cohorts within the Science Education department. One champion. This isn't just a quiz — it's the ultimate test of knowledge and teamwork where only the sharpest survive.
               </p>
             </motion.div>
           </div>
@@ -285,7 +282,7 @@ export default function Home() {
           >
             <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-4">The Competition</p>
             <h2 className="font-display font-bold text-3xl md:text-5xl mb-4">Meet The Cohorts</h2>
-            <p className="text-muted-foreground">Eight departments. One title. Who will dominate DESCO 2.0?</p>
+            <p className="text-muted-foreground">Five academic cohorts. One department. One title. Who will dominate DESCO 2.0?</p>
           </motion.div>
 
           <div ref={cohortsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

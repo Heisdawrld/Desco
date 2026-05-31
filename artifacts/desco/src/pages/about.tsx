@@ -60,10 +60,10 @@ export default function About() {
               <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-4">What is DESCO?</p>
               <h2 className="font-display font-bold text-3xl md:text-4xl mb-6">The Premier Intellectual Battleground</h2>
               <p className="text-muted-foreground leading-relaxed mb-4 text-lg">
-                DESCO — the <strong className="text-white">Departmental Showdown Competition</strong> — is the flagship intellectual competition organized by the University of Lagos Science Education Students' Association (ULSESA).
+                DESCO — the <strong className="text-white">Cohort Showdown Competition</strong> — is the flagship intellectual competition organized by the University of Lagos Science Education Students' Association (ULSESA).
               </p>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                Born from a desire to celebrate academic brilliance beyond the classroom, DESCO brings together the brightest minds across all Science Education departments in a battle of wits, speed, and strategy.
+                Born from a desire to celebrate academic brilliance beyond the classroom, DESCO brings together the brightest minds across all academic cohorts in the Science Education department in a battle of wits, speed, and strategy.
               </p>
               <p className="text-muted-foreground leading-relaxed">
                 DESCO 2.0 is bigger, bolder, and more competitive than ever. With six intense rounds, only one cohort will emerge victorious.
@@ -78,7 +78,7 @@ export default function About() {
               className="grid grid-cols-2 gap-4"
             >
               {[
-                { label: "Cohorts Competing", value: "8" },
+                { label: "Cohorts Competing", value: "5" },
                 { label: "Competition Rounds", value: "6" },
                 { label: "Edition", value: "2.0" },
                 { label: "Champion", value: "1" },
@@ -158,10 +158,10 @@ export default function About() {
             <h3 className="font-display font-bold text-3xl mb-6">DESCO 1.0 Champions</h3>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 font-bold text-lg mb-6">
               <Trophy size={20} />
-              Biology Cohort
+              Biology Education Cohort
             </div>
             <p className="text-muted-foreground leading-relaxed">
-              The Biology department claimed the inaugural DESCO crown in a thrilling finale that went down to the final buzzer question. Their deep knowledge base, tactical discipline, and unshakeable teamwork proved too much for the competition. Now the crown is on the line — and seven other cohorts are coming for it.
+              The Biology Education cohort claimed the inaugural DESCO crown in a thrilling finale that went down to the final buzzer question. Their deep knowledge base, tactical discipline, and unshakeable teamwork proved too much for the competition. Now the crown is on the line — and four other cohorts are coming for it.
             </p>
           </motion.div>
         </div>

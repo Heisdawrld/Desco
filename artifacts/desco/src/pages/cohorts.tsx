@@ -18,7 +18,7 @@ function PageHeader({ label, title, subtitle }: { label: string; title: string; 
 
 const COHORTS = [
   {
-    name: "Biology",
+    name: "Biology Education",
     subtitle: "Defending Champions · Life Sciences Division",
     icon: <Microscope size={28} />,
     desc: "The reigning champions of DESCO 1.0 return with a target on their backs. Known for encyclopedic knowledge of life sciences, clinical precision under pressure, and unmatched team chemistry.",
@@ -29,44 +29,34 @@ const COHORTS = [
     iconColor: "bg-yellow-500/10 border-yellow-500/20 text-yellow-400",
   },
   {
-    name: "Chemistry",
+    name: "Chemistry Education",
     subtitle: "The Reaction Masters · Physical Sciences Division",
     icon: <FlaskConical size={28} />,
-    desc: "A cohort built on precision and analytical rigor. The Chemistry department has retooled since DESCO 1.0, bringing in fresh tactical minds and a renewed hunger to dethrone Biology.",
+    desc: "A cohort built on precision and analytical rigor. The Chemistry Education cohort has retooled since DESCO 1.0, bringing in fresh tactical minds and a renewed hunger to dethrone Biology.",
     champion: false,
     color: "from-cyan-500/10 to-blue-500/5",
     borderColor: "hover:border-cyan-500/30",
     iconColor: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
   },
   {
-    name: "Physics",
+    name: "Physics Education",
     subtitle: "The Force · Physical Sciences Division",
     icon: <Atom size={28} />,
-    desc: "Harnessing the fundamental forces of the universe — and competitive academic spirit. The Physics cohort brings mathematical precision and conceptual depth to every round.",
+    desc: "Harnessing the fundamental forces of the universe — and competitive academic spirit. The Physics Education cohort brings mathematical precision and conceptual depth to every round.",
     champion: false,
     color: "from-indigo-500/10 to-violet-500/5",
     borderColor: "hover:border-indigo-500/30",
     iconColor: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
   },
   {
-    name: "Mathematics",
+    name: "Mathematics Education",
     subtitle: "The Calculated · Pure Sciences Division",
     icon: <Calculator size={28} />,
-    desc: "Where logic meets lightning speed. The Mathematics cohort thrives in the Puzzle & Logic Arena and brings unshakeable analytical foundations to every discipline they touch.",
+    desc: "Where logic meets lightning speed. The Mathematics Education cohort thrives in the Puzzle & Logic Arena and brings unshakeable analytical foundations to every discipline they touch.",
     champion: false,
     color: "from-purple-500/10 to-violet-500/5",
     borderColor: "hover:border-purple-500/30",
     iconColor: "bg-purple-500/10 border-purple-500/20 text-purple-400",
-  },
-  {
-    name: "Computer Science",
-    subtitle: "The Algorithms · Technology Division",
-    icon: <Monitor size={28} />,
-    desc: "New to the lineup but already a feared competitor. The Computer Science cohort combines computational thinking with rapid pattern recognition — a dangerous combination across all six rounds.",
-    champion: false,
-    color: "from-green-500/10 to-emerald-500/5",
-    borderColor: "hover:border-green-500/30",
-    iconColor: "bg-green-500/10 border-green-500/20 text-green-400",
   },
   {
     name: "Integrated Science",
@@ -78,26 +68,6 @@ const COHORTS = [
     borderColor: "hover:border-pink-500/30",
     iconColor: "bg-pink-500/10 border-pink-500/20 text-pink-400",
   },
-  {
-    name: "Geography",
-    subtitle: "The Navigators · Earth Sciences Division",
-    icon: <MapPin size={28} />,
-    desc: "Mapping routes to victory with spatial intelligence and environmental mastery. The Geography cohort brings a unique analytical lens that confounds opponents expecting traditional science dominance.",
-    champion: false,
-    color: "from-orange-500/10 to-amber-500/5",
-    borderColor: "hover:border-orange-500/30",
-    iconColor: "bg-orange-500/10 border-orange-500/20 text-orange-400",
-  },
-  {
-    name: "Human Kinetics",
-    subtitle: "The Athletes · Applied Sciences Division",
-    icon: <Activity size={28} />,
-    desc: "Fast on their feet, sharper in mind. The Human Kinetics cohort brings competitive sports psychology, biomechanics knowledge, and relentless team energy to the showdown.",
-    champion: false,
-    color: "from-red-500/10 to-rose-500/5",
-    borderColor: "hover:border-red-500/30",
-    iconColor: "bg-red-500/10 border-red-500/20 text-red-400",
-  },
 ];
 
 export default function Cohorts() {
@@ -106,7 +76,7 @@ export default function Cohorts() {
       <PageHeader
         label="The Teams"
         title="The Cohorts"
-        subtitle="Eight departments. Eight identities. One title on the line."
+        subtitle="Five academic cohorts. One department. One title on the line."
       />
 
       <section className="py-12 pb-24">

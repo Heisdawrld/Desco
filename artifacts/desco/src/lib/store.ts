@@ -48,14 +48,11 @@ export type NewsItem = {
 // ── Fallback defaults for offline/SSR ────────────────────────────────────────
 
 const DEFAULT_SCORES: CohortScore[] = [
-  { id: "biology", name: "Biology", sprint: 480, clash: 520, specialist: 610, puzzle: 440, buzzer: 470, blackout: 330 },
-  { id: "chemistry", name: "Chemistry", sprint: 450, clash: 490, specialist: 580, puzzle: 410, buzzer: 450, blackout: 340 },
-  { id: "physics", name: "Physics", sprint: 460, clash: 470, specialist: 550, puzzle: 430, buzzer: 440, blackout: 230 },
-  { id: "mathematics", name: "Mathematics", sprint: 420, clash: 460, specialist: 520, puzzle: 470, buzzer: 420, blackout: 250 },
-  { id: "computerscience", name: "Computer Science", sprint: 400, clash: 430, specialist: 480, puzzle: 390, buzzer: 410, blackout: 270 },
+  { id: "biology", name: "Biology Education", sprint: 480, clash: 520, specialist: 610, puzzle: 440, buzzer: 470, blackout: 330 },
+  { id: "chemistry", name: "Chemistry Education", sprint: 450, clash: 490, specialist: 580, puzzle: 410, buzzer: 450, blackout: 340 },
+  { id: "physics", name: "Physics Education", sprint: 460, clash: 470, specialist: 550, puzzle: 430, buzzer: 440, blackout: 230 },
+  { id: "mathematics", name: "Mathematics Education", sprint: 420, clash: 460, specialist: 520, puzzle: 470, buzzer: 420, blackout: 250 },
   { id: "integratedscience", name: "Integrated Science", sprint: 390, clash: 420, specialist: 460, puzzle: 380, buzzer: 390, blackout: 250 },
-  { id: "geography", name: "Geography", sprint: 350, clash: 400, specialist: 430, puzzle: 360, buzzer: 380, blackout: 220 },
-  { id: "humankinetics", name: "Human Kinetics", sprint: 330, clash: 370, specialist: 410, puzzle: 340, buzzer: 360, blackout: 200 },
 ];
 
 const DEFAULT_NEWS: NewsItem[] = [

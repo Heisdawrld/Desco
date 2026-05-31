@@ -19,7 +19,7 @@ function PageHeader({ label, title, subtitle }: { label: string; title: string; 
   );
 }
 
-const DEPARTMENTS = ["Biology", "Chemistry", "Physics", "Mathematics", "Computer Science", "Integrated Science", "Geography", "Human Kinetics"];
+const DEPARTMENTS = ["Biology Education", "Chemistry Education", "Physics Education", "Mathematics Education", "Integrated Science"];
 const LEVELS = ["100 Level", "200 Level", "300 Level", "400 Level", "500 Level"];
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
@@ -111,8 +111,8 @@ function ContestantForm() {
       </div>
       <div className="grid sm:grid-cols-2 gap-5">
         <div>
-          <FieldLabel required>Department</FieldLabel>
-          <SelectField id="cf-dept" options={DEPARTMENTS} value={form.dept} onChange={set("dept")} placeholder="Select department" required />
+          <FieldLabel required>Cohort</FieldLabel>
+          <SelectField id="cf-dept" options={DEPARTMENTS} value={form.dept} onChange={set("dept")} placeholder="Select cohort" required />
         </div>
         <div>
           <FieldLabel required>Level</FieldLabel>
@@ -195,8 +195,8 @@ function AudienceForm() {
       </div>
       <div className="grid sm:grid-cols-2 gap-5">
         <div>
-          <FieldLabel required>Department</FieldLabel>
-          <InputField id="af-dept" placeholder="Your department" value={form.dept} onChange={set("dept")} required />
+          <FieldLabel required>Cohort</FieldLabel>
+          <InputField id="af-dept" placeholder="Your cohort (e.g. Biology Education)" value={form.dept} onChange={set("dept")} required />
         </div>
         <div>
           <FieldLabel required>Level</FieldLabel>

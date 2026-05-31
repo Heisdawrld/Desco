@@ -40,7 +40,7 @@ const ROUNDS = [
     num: "03",
     name: "Specialist Round",
     icon: <Target size={28} />,
-    desc: "Deep-dive questions within each department's core expertise. This is where specialists shine — advanced concepts, edge-case scenarios, and mastery-level problem solving.",
+    desc: "Deep-dive questions within each cohort's core expertise. This is where specialists shine — advanced concepts, edge-case scenarios, and mastery-level problem solving.",
     tag: "Mastery · Depth · Precision",
     color: "from-green-500/10 to-emerald-500/5",
     border: "hover:border-green-500/40",
