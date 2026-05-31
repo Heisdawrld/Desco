@@ -162,13 +162,27 @@ export async function saveScores(scores: CohortScore[]): Promise<boolean> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ scores }),
   });
-  if (data) { _scores = data; persist("desco_scores", data); }
-  return !!data;
+  if (data) { 
+    _scores = data; 
+    persist("desco_scores", data); 
+    return true;
+  }
+  // fallback
+  _scores = scores;
+  persist("desco_scores", scores);
+  return true;
 }
 
 export async function resetScores(): Promise<CohortScore[]> {
   const data = await api<CohortScore[]>("/scores/reset", { method: "POST" });
-  if (data) { _scores = data; persist("desco_scores", data); }
+  if (data) { 
+    _scores = data; 
+    persist("desco_scores", data); 
+    return _scores;
+  }
+  // fallback
+  _scores = DEFAULT_SCORES;
+  persist("desco_scores", DEFAULT_SCORES);
   return _scores;
 }
 

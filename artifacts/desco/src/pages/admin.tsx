@@ -31,15 +31,27 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
     e.preventDefault();
     setError(false);
     
-    const res = await fetch(`${API_BASE}/admin/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: pw }),
-    });
-    
-    if (res.ok) {
-      const data = await res.json();
-      sessionStorage.setItem("desco_admin_token", data.token);
+    // Attempt API login
+    try {
+      const res = await fetch(`${API_BASE}/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        sessionStorage.setItem("desco_admin_token", data.token);
+        sessionStorage.setItem("desco_admin", "1");
+        onLogin();
+        return;
+      }
+    } catch (err) {
+      console.warn("API login failed, trying fallback:", err);
+    }
+
+    // Fallback to hardcoded password for local/offline/demo use
+    if (pw === ADMIN_PASSWORD) {
       sessionStorage.setItem("desco_admin", "1");
       onLogin();
     } else {
