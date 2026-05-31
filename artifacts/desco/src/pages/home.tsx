@@ -24,7 +24,7 @@ const ROUNDS = [
   { num: "06", name: "Blackout Question", icon: <Trophy size={20} /> },
 ];
 
-const EVENT_TIME = new Date("2026-07-15T09:00:00").getTime();
+const EVENT_TIME = new Date("2026-07-17T09:00:00").getTime();
 
 function useCountdown() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
