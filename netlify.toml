@@ -1,7 +1,7 @@
 [build]
   base = "artifacts/desco"
-  command = "npm install -g pnpm && pnpm install && pnpm run build"
-  publish = "dist"
+  command = "pnpm run build"
+  publish = "dist/public"
 
 [[redirects]]
   from = "/*"
