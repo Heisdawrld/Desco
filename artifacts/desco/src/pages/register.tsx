@@ -73,30 +73,28 @@ function ContestantForm() {
     if (file) setFileName(file.name);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fileName) {
       toast({ title: "Passport photo required", description: "Please upload your passport photograph.", variant: "destructive" });
       return;
     }
     setSending(true);
-    setTimeout(() => {
-      addRegistrant({
-        id: Date.now().toString(),
-        type: "contestant",
-        name: form.name,
-        matric: form.matric,
-        department: form.dept,
-        level: form.level,
-        phone: form.phone,
-        email: form.email,
-        registeredAt: new Date().toISOString(),
-      });
-      setSending(false);
-      toast({ title: "Registration submitted!", description: "You'll receive a confirmation email shortly." });
-      setForm({ name: "", matric: "", dept: "", level: "", phone: "", email: "" });
-      setFileName("");
-    }, 1000);
+    await addRegistrant({
+      id: crypto.randomUUID(),
+      type: "contestant",
+      name: form.name,
+      matric: form.matric,
+      department: form.dept,
+      level: form.level,
+      phone: form.phone,
+      email: form.email,
+      registeredAt: new Date().toISOString(),
+    });
+    setSending(false);
+    toast({ title: "Registration submitted!", description: "You'll receive a confirmation email shortly." });
+    setForm({ name: "", matric: "", dept: "", level: "", phone: "", email: "" });
+    setFileName("");
   };
 
   return (
@@ -171,24 +169,22 @@ function AudienceForm() {
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
-    setTimeout(() => {
-      addRegistrant({
-        id: Date.now().toString(),
-        type: "audience",
-        name: form.name,
-        department: form.dept,
-        level: form.level,
-        phone: form.phone,
-        email: form.email,
-        registeredAt: new Date().toISOString(),
-      });
-      setSending(false);
-      toast({ title: "Seat reserved!", description: "See you at the showdown." });
-      setForm({ name: "", dept: "", level: "", phone: "", email: "" });
-    }, 1000);
+    await addRegistrant({
+      id: crypto.randomUUID(),
+      type: "audience",
+      name: form.name,
+      department: form.dept,
+      level: form.level,
+      phone: form.phone,
+      email: form.email,
+      registeredAt: new Date().toISOString(),
+    });
+    setSending(false);
+    toast({ title: "Seat reserved!", description: "See you at the showdown." });
+    setForm({ name: "", dept: "", level: "", phone: "", email: "" });
   };
 
   return (

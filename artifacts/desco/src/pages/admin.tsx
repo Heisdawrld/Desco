@@ -6,14 +6,16 @@ import {
   LogOut, ChevronRight, Eye, EyeOff, ArrowLeft, X
 } from "lucide-react";
 import {
-  getRegistrants, deleteRegistrant, clearRegistrants,
-  getScores, saveScores, resetScores, totalScore,
-  getNews, addNews, deleteNews,
+  fetchRegistrants,
+  deleteRegistrant, clearRegistrants,
+  fetchScores, saveScores, resetScores, totalScore,
+  fetchNews, addNews, deleteNews,
   type Registrant, type CohortScore, type NewsItem
 } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 
-const ADMIN_PASSWORD = "desco2026";
+const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
+const ADMIN_PASSWORD = "desco2026"; // fallback, overridden by env
 
 type Tab = "overview" | "registrants" | "scores" | "news";
 
@@ -25,9 +27,19 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [error, setError] = useState(false);
   const { toast } = useToast();
 
-  const handle = (e: React.FormEvent) => {
+  const handle = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pw === ADMIN_PASSWORD) {
+    setError(false);
+    
+    const res = await fetch(`${API_BASE}/admin/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: pw }),
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      sessionStorage.setItem("desco_admin_token", data.token);
       sessionStorage.setItem("desco_admin", "1");
       onLogin();
     } else {
@@ -484,45 +496,50 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [news, setNews] = useState<NewsItem[]>([]);
   const { toast } = useToast();
 
-  const refresh = () => {
-    setRegistrants(getRegistrants());
-    setScores(getScores());
-    setNews(getNews());
+  const refresh = async () => {
+    const [r, s, n] = await Promise.all([
+      fetchRegistrants(),
+      fetchScores(),
+      fetchNews(),
+    ]);
+    setRegistrants(r);
+    setScores(s);
+    setNews(n);
   };
 
   useEffect(() => { refresh(); }, []);
 
-  const handleDeleteRegistrant = (id: string) => {
-    deleteRegistrant(id);
-    setRegistrants(getRegistrants());
+  const handleDeleteRegistrant = async (id: string) => {
+    await deleteRegistrant(id);
+    setRegistrants((prev) => prev.filter((r) => r.id !== id));
     toast({ title: "Registrant removed." });
   };
 
-  const handleClearRegistrants = () => {
-    clearRegistrants();
+  const handleClearRegistrants = async () => {
+    await clearRegistrants();
     setRegistrants([]);
     toast({ title: "All registrants cleared." });
   };
 
-  const handleSaveScores = (s: CohortScore[]) => {
-    saveScores(s);
-    setScores(getScores());
+  const handleSaveScores = async (s: CohortScore[]) => {
+    await saveScores(s);
+    setScores(s);
   };
 
-  const handleResetScores = () => {
-    resetScores();
-    setScores(getScores());
+  const handleResetScores = async () => {
+    const s = await resetScores();
+    setScores(s);
     toast({ title: "Scores reset to defaults." });
   };
 
-  const handleAddNews = (item: Omit<NewsItem, "id">) => {
-    addNews(item);
-    setNews(getNews());
+  const handleAddNews = async (item: Omit<NewsItem, "id">) => {
+    await addNews(item);
+    refresh();
   };
 
-  const handleDeleteNews = (id: string) => {
-    deleteNews(id);
-    setNews(getNews());
+  const handleDeleteNews = async (id: string) => {
+    await deleteNews(id);
+    setNews((prev) => prev.filter((n) => n.id !== id));
     toast({ title: "News item deleted." });
   };
 

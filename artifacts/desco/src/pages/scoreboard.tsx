@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Layout } from "@/components/layout";
 import { Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { getScores, totalScore, type CohortScore } from "@/lib/store";
+import { fetchScores, totalScore, type CohortScore } from "@/lib/store";
 
 function PageHeader({ label, title, subtitle }: { label: string; title: string; subtitle: string }) {
   return (
@@ -37,14 +37,14 @@ export default function Scoreboard() {
   const [animating, setAnimating] = useState(false);
 
   useEffect(() => {
-    setScores(getScores());
+    fetchScores().then(setScores);
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       setAnimating(true);
-      setTimeout(() => {
-        const fresh = getScores();
+      setTimeout(async () => {
+        const fresh = await fetchScores();
         setScores(fresh);
         setLastUpdate(new Date());
         setAnimating(false);
