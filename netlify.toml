@@ -2,8 +2,16 @@
   base = "artifacts/desco"
   command = "pnpm run build"
   publish = "dist/public"
+  functions = "../netlify/functions"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Proxy API calls to Netlify Functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
