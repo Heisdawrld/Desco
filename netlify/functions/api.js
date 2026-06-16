@@ -112,7 +112,7 @@ const RegistrantSchema = z.object({
   level: z.string().min(1),
   phone: z.string().min(1),
   email: z.string().email(),
-  passportBase64: z.string().optional(),
+  passportBase64: z.string().nullable().optional(),
   registeredAt: z.string().datetime(),
 });
 
