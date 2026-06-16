@@ -24,13 +24,17 @@ const { Resend } = require("resend");
 
 // ── Env validation ──────────────────────────────────────────────────────────
 
-const DATABASE_URL = process.env.DATABASE_URL;
+// Read Turso env vars using the standard naming convention
+// (matches the Netlify env the user already has configured).
+// We fall back to DATABASE_URL for anyone who set it that way.
+const TURSO_DATABASE_URL =
+  process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
 const TURSO_AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN;
 const IS_PROD = process.env.NODE_ENV === "production";
 
-if (!DATABASE_URL) {
+if (!TURSO_DATABASE_URL) {
   throw new Error(
-    "DATABASE_URL is not set. Configure it in the Netlify dashboard (Site settings → Environment variables).",
+    "TURSO_DATABASE_URL (or DATABASE_URL) is not set. Configure it in the Netlify dashboard (Site settings → Environment variables).",
   );
 }
 if (!TURSO_AUTH_TOKEN) {
@@ -41,7 +45,7 @@ if (!TURSO_AUTH_TOKEN) {
 
 // ── DB client ───────────────────────────────────────────────────────────────
 
-const client = createClient({ url: DATABASE_URL, authToken: TURSO_AUTH_TOKEN });
+const client = createClient({ url: TURSO_DATABASE_URL, authToken: TURSO_AUTH_TOKEN });
 const db = drizzle(client);
 
 // ── Schema ──────────────────────────────────────────────────────────────────
