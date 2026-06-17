@@ -64,18 +64,29 @@ function ContestantForm() {
   const [form, setForm] = useState({ name: "", matric: "", dept: "", level: "", phone: "", email: "" });
   const [sending, setSending] = useState(false);
   const [fileName, setFileName] = useState("");
+  const [passportBase64, setPassportBase64] = useState<string | null>(null);
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setFileName(file.name);
+    if (file) {
+      setFileName(file.name);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setPassportBase64(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFileName("");
+      setPassportBase64(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fileName) {
+    if (!fileName || !passportBase64) {
       toast({ title: "Passport photo required", description: "Please upload your passport photograph.", variant: "destructive" });
       return;
     }
@@ -89,12 +100,14 @@ function ContestantForm() {
       level: form.level,
       phone: form.phone,
       email: form.email,
+      passportBase64,
       registeredAt: new Date().toISOString(),
     });
     setSending(false);
     toast({ title: "Registration submitted!", description: "You'll receive a confirmation email shortly." });
     setForm({ name: "", matric: "", dept: "", level: "", phone: "", email: "" });
     setFileName("");
+    setPassportBase64(null);
   };
 
   return (

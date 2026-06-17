@@ -4,14 +4,14 @@
   publish = "dist/public"
   functions = "../netlify/functions"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-# Proxy API calls to Netlify Functions
+# Proxy API calls to Netlify Functions (must come first!)
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api/:splat"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

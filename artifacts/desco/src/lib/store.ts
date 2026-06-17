@@ -11,6 +11,7 @@ export type Contestant = {
   level: string;
   phone: string;
   email: string;
+  passportBase64?: string | null;
   registeredAt: string;
 };
 
@@ -22,6 +23,7 @@ export type Audience = {
   level: string;
   phone: string;
   email: string;
+  passportBase64?: string | null;
   registeredAt: string;
 };
 
