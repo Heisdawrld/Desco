@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import {
   Users, UserCheck, Trophy, Newspaper, Trash2, Plus, Save, RotateCcw,
-  LogOut, ChevronRight, Eye, EyeOff, ArrowLeft, X
+  LogOut, ChevronRight, Eye, EyeOff, ArrowLeft, X, Image, Calendar, Phone, Mail, User, GraduationCap, Hash
 } from "lucide-react";
 import {
   fetchRegistrants,
@@ -202,6 +202,7 @@ function RegistrantsTab({ registrants, onDelete, onClear }: {
 }) {
   const [filter, setFilter] = useState<"all" | "contestant" | "audience">("all");
   const [confirmClear, setConfirmClear] = useState(false);
+  const [selectedRegistrant, setSelectedRegistrant] = useState<Registrant | null>(null);
 
   const filtered = filter === "all" ? registrants : registrants.filter((r) => r.type === filter);
 
@@ -240,10 +241,10 @@ function RegistrantsTab({ registrants, onDelete, onClear }: {
           <div className="py-16 text-center text-muted-foreground text-sm">No registrants found.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px]">
+            <table className="w-full min-w-[750px]">
               <thead>
                 <tr className="border-b border-white/10 bg-white/2">
-                  {["Name", "Type", "Department", "Level", "Email", "Phone", "Registered", ""].map((h) => (
+                  {["Photo", "Name", "Type", "Matric", "Department", "Level", "Email", "Phone", "Registered", ""].map((h) => (
                     <th key={h} className="text-left py-3 px-4 text-xs uppercase tracking-widest text-muted-foreground font-semibold">{h}</th>
                   ))}
                 </tr>
@@ -251,18 +252,41 @@ function RegistrantsTab({ registrants, onDelete, onClear }: {
               <tbody>
                 {filtered.map((r) => (
                   <tr key={r.id} className="border-b border-white/5 hover:bg-white/2 transition-colors">
-                    <td className="py-3 px-4 font-semibold text-sm">{r.name}</td>
+                    <td className="py-3 px-4">
+                      {r.passportBase64 ? (
+                        <img
+                          src={r.passportBase64}
+                          alt={`${r.name}'s passport`}
+                          className="w-10 h-10 rounded-full object-cover border border-white/20"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-muted-foreground">
+                          <User size={16} />
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 font-semibold text-sm cursor-pointer hover:text-primary transition-colors" onClick={() => setSelectedRegistrant(r)}>
+                      {r.name}
+                    </td>
                     <td className="py-3 px-4">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${r.type === "contestant" ? "bg-primary/10 text-primary" : "bg-secondary/10 text-secondary"}`}>
                         {r.type}
                       </span>
                     </td>
+                    <td className="py-3 px-4 text-muted-foreground text-sm">{"matric" in r ? r.matric || "—" : "—"}</td>
                     <td className="py-3 px-4 text-muted-foreground text-sm">{r.department}</td>
                     <td className="py-3 px-4 text-muted-foreground text-sm">{r.level}</td>
                     <td className="py-3 px-4 text-muted-foreground text-sm">{r.email}</td>
                     <td className="py-3 px-4 text-muted-foreground text-sm">{r.phone}</td>
                     <td className="py-3 px-4 text-muted-foreground text-xs">{new Date(r.registeredAt).toLocaleDateString()}</td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 flex items-center gap-1">
+                      <button
+                        onClick={() => setSelectedRegistrant(r)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-muted-foreground hover:text-white transition-all"
+                        title="View details"
+                      >
+                        <Eye size={14} />
+                      </button>
                       <button
                         onClick={() => onDelete(r.id)}
                         className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
@@ -278,6 +302,112 @@ function RegistrantsTab({ registrants, onDelete, onClear }: {
           </div>
         )}
       </div>
+
+      {selectedRegistrant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card rounded-2xl border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <h3 className="font-display font-bold text-xl">Registration Details</h3>
+              <button
+                onClick={() => setSelectedRegistrant(null)}
+                className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="flex items-center gap-6">
+                {selectedRegistrant.passportBase64 ? (
+                  <img
+                    src={selectedRegistrant.passportBase64}
+                    alt={`${selectedRegistrant.name}'s passport`}
+                    className="w-28 h-28 rounded-2xl object-cover border border-white/20"
+                  />
+                ) : (
+                  <div className="w-28 h-28 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-muted-foreground">
+                    <User size={48} />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h4 className="font-display font-bold text-2xl mb-2">{selectedRegistrant.name}</h4>
+                  <span className={`text-xs px-3 py-1 rounded-full font-bold ${selectedRegistrant.type === "contestant" ? "bg-primary/10 text-primary" : "bg-secondary/10 text-secondary"}`}>
+                    {selectedRegistrant.type}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                {selectedRegistrant.type === "contestant" && ("matric" in selectedRegistrant) && selectedRegistrant.matric && (
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <Hash className="text-primary mt-0.5" size={20} />
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Matric Number</p>
+                      <p className="font-semibold">{selectedRegistrant.matric}</p>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+                  <GraduationCap className="text-primary mt-0.5" size={20} />
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Department</p>
+                    <p className="font-semibold">{selectedRegistrant.department}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+                  <Trophy className="text-primary mt-0.5" size={20} />
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Level</p>
+                    <p className="font-semibold">{selectedRegistrant.level}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+                  <Mail className="text-primary mt-0.5" size={20} />
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Email</p>
+                    <p className="font-semibold">{selectedRegistrant.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+                  <Phone className="text-primary mt-0.5" size={20} />
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Phone</p>
+                    <p className="font-semibold">{selectedRegistrant.phone}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+                  <Calendar className="text-primary mt-0.5" size={20} />
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Registered At</p>
+                    <p className="font-semibold">{new Date(selectedRegistrant.registeredAt).toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  onClick={() => {
+                    onDelete(selectedRegistrant.id);
+                    setSelectedRegistrant(null);
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold hover:bg-destructive/90 transition-all flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={18} /> Delete Registration
+                </button>
+                <button
+                  onClick={() => setSelectedRegistrant(null)}
+                  className="px-6 py-3 rounded-xl glass-card border border-white/10 font-bold hover:bg-white/10 transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
