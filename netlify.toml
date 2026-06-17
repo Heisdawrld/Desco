@@ -2,7 +2,7 @@
   base = "artifacts/desco"
   command = "pnpm run build"
   publish = "dist/public"
-  functions = "../netlify/functions"
+  functions = "../../netlify/functions"
 
 # Proxy API calls to Netlify Functions (must come first!)
 [[redirects]]

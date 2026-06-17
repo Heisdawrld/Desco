@@ -193,6 +193,7 @@ function errorResponse(statusCode, message, detail) {
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "desco2026";
 
 exports.handler = async (event) => {
+  console.log(`[api] ${event.httpMethod} ${event.path}`);
   if (event.httpMethod === "OPTIONS") {
     return jsonResponse(200, {});
   }
