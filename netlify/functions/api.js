@@ -72,12 +72,12 @@ const adminSessionTable = sqliteTable("admin_sessions", {
 const cohortScoreTable = sqliteTable("cohort_scores", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  sprint: real("sprint").notNull().default(0),
-  clash: real("clash").notNull().default(0),
-  specialist: real("specialist").notNull().default(0),
-  puzzle: real("puzzle").notNull().default(0),
-  buzzer: real("buzzer").notNull().default(0),
-  blackout: real("blackout").notNull().default(0),
+  sprint: integer("sprint").notNull().default(0),
+  clash: integer("clash").notNull().default(0),
+  specialist: integer("specialist").notNull().default(0),
+  puzzle: integer("puzzle").notNull().default(0),
+  buzzer: integer("buzzer").notNull().default(0),
+  blackout: integer("blackout").notNull().default(0),
 });
 
 const newsTable = sqliteTable("news", {
