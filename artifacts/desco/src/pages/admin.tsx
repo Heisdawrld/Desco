@@ -639,28 +639,55 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const { toast } = useToast();
 
   const refresh = async () => {
-    const [r, s, n] = await Promise.all([
-      fetchRegistrants(),
-      fetchScores(),
-      fetchNews(),
-    ]);
-    setRegistrants(r);
-    setScores(s);
-    setNews(n);
+    try {
+      const [r, s, n] = await Promise.all([
+        fetchRegistrants(),
+        fetchScores(),
+        fetchNews(),
+      ]);
+      setRegistrants(r);
+      setScores(s);
+      setNews(n);
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Failed to load data",
+        description: err instanceof Error ? err.message : "Please check your network and try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   useEffect(() => { refresh(); }, []);
 
   const handleDeleteRegistrant = async (id: string) => {
-    await deleteRegistrant(id);
-    setRegistrants((prev) => prev.filter((r) => r.id !== id));
-    toast({ title: "Registrant removed." });
+    try {
+      await deleteRegistrant(id);
+      setRegistrants((prev) => prev.filter((r) => r.id !== id));
+      toast({ title: "Registrant removed." });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Failed to delete registrant",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleClearRegistrants = async () => {
-    await clearRegistrants();
-    setRegistrants([]);
-    toast({ title: "All registrants cleared." });
+    try {
+      await clearRegistrants();
+      setRegistrants([]);
+      toast({ title: "All registrants cleared." });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Failed to clear registrants",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSaveScores = async (s: CohortScore[]) => {

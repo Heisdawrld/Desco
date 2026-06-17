@@ -91,23 +91,33 @@ function ContestantForm() {
       return;
     }
     setSending(true);
-    await addRegistrant({
-      id: crypto.randomUUID(),
-      type: "contestant",
-      name: form.name,
-      matric: form.matric,
-      department: form.dept,
-      level: form.level,
-      phone: form.phone,
-      email: form.email,
-      passportBase64,
-      registeredAt: new Date().toISOString(),
-    });
-    setSending(false);
-    toast({ title: "Registration submitted!", description: "You'll receive a confirmation email shortly." });
-    setForm({ name: "", matric: "", dept: "", level: "", phone: "", email: "" });
-    setFileName("");
-    setPassportBase64(null);
+    try {
+      await addRegistrant({
+        id: crypto.randomUUID(),
+        type: "contestant",
+        name: form.name,
+        matric: form.matric,
+        department: form.dept,
+        level: form.level,
+        phone: form.phone,
+        email: form.email,
+        passportBase64,
+        registeredAt: new Date().toISOString(),
+      });
+      toast({ title: "Registration submitted!", description: "You'll receive a confirmation email shortly." });
+      setForm({ name: "", matric: "", dept: "", level: "", phone: "", email: "" });
+      setFileName("");
+      setPassportBase64(null);
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Registration failed",
+        description: err instanceof Error ? err.message : "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -185,19 +195,29 @@ function AudienceForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
-    await addRegistrant({
-      id: crypto.randomUUID(),
-      type: "audience",
-      name: form.name,
-      department: form.dept,
-      level: form.level,
-      phone: form.phone,
-      email: form.email,
-      registeredAt: new Date().toISOString(),
-    });
-    setSending(false);
-    toast({ title: "Seat reserved!", description: "See you at the showdown." });
-    setForm({ name: "", dept: "", level: "", phone: "", email: "" });
+    try {
+      await addRegistrant({
+        id: crypto.randomUUID(),
+        type: "audience",
+        name: form.name,
+        department: form.dept,
+        level: form.level,
+        phone: form.phone,
+        email: form.email,
+        registeredAt: new Date().toISOString(),
+      });
+      toast({ title: "Seat reserved!", description: "See you at the showdown." });
+      setForm({ name: "", dept: "", level: "", phone: "", email: "" });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Registration failed",
+        description: err instanceof Error ? err.message : "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (

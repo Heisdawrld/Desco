@@ -82,61 +82,50 @@ function load<T>(key: string): T | null {
 
 // ── API fetch wrapper ─────────────────────────────────────────────────────────
 
-async function api<T>(path: string, opts?: RequestInit): Promise<T | null> {
-  try {
-    const res = await fetch(`${API_BASE}${path}`, opts);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json() as T;
-  } catch (err) {
-    console.warn(`[store] API ${path} failed:`, err);
-    return null;
+async function api<T>(path: string, opts?: RequestInit): Promise<T> {
+  console.log(`[store] Calling API: ${API_BASE}${path}`);
+  const res = await fetch(`${API_BASE}${path}`, opts);
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "");
+    throw new Error(`API Error ${res.status}: ${errorText || res.statusText}`);
   }
+  return await res.json() as T;
 }
 
 // ── Registrants ───────────────────────────────────────────────────────────────
 
 export async function fetchRegistrants(): Promise<Registrant[]> {
   const data = await api<Registrant[]>("/registrants");
-  if (data) {
-    _registrants = data;
-    persist("desco_registrants", data);
-    return data;
-  }
-  return _registrants ?? load<Registrant[]>("desco_registrants") ?? [];
+  _registrants = data;
+  persist("desco_registrants", data);
+  return data;
 }
 
 export function getRegistrants(): Registrant[] {
   return _registrants ?? load<Registrant[]>("desco_registrants") ?? [];
 }
 
-export async function addRegistrant(r: Registrant): Promise<boolean> {
+export async function addRegistrant(r: Registrant): Promise<Registrant> {
   const data = await api<Registrant>("/registrants", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(r),
   });
-  if (data) {
-    _registrants = [data, ...(_registrants ?? [])];
-    return true;
-  }
-  // fallback: add locally
-  _registrants = [r, ...(_registrants ?? [])];
+  _registrants = [data, ...(_registrants ?? [])];
   persist("desco_registrants", _registrants);
-  return true;
+  return data;
 }
 
-export async function deleteRegistrant(id: string): Promise<boolean> {
+export async function deleteRegistrant(id: string): Promise<void> {
   await api(`/registrants/${id}`, { method: "DELETE" });
   _registrants = (_registrants ?? []).filter((r) => r.id !== id);
   persist("desco_registrants", _registrants);
-  return true;
 }
 
-export async function clearRegistrants(): Promise<boolean> {
+export async function clearRegistrants(): Promise<void> {
   await api("/registrants", { method: "DELETE" });
   _registrants = [];
   persist("desco_registrants", []);
-  return true;
 }
 
 // ── Scores ───────────────────────────────────────────────────────────────────
