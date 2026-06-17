@@ -69,6 +69,38 @@ const adminSessionTable = sqliteTable("admin_sessions", {
   expiresAt: integer("expires_at").notNull(),
 });
 
+const cohortScoreTable = sqliteTable("cohort_scores", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  sprint: real("sprint").notNull().default(0),
+  clash: real("clash").notNull().default(0),
+  specialist: real("specialist").notNull().default(0),
+  puzzle: real("puzzle").notNull().default(0),
+  buzzer: real("buzzer").notNull().default(0),
+  blackout: real("blackout").notNull().default(0),
+});
+
+const newsTable = sqliteTable("news", {
+  id: text("id").primaryKey(),
+  date: text("date").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+});
+
+const DEFAULT_SCORES = [
+  { id: "biology", name: "Biology Education", sprint: 480, clash: 520, specialist: 610, puzzle: 440, buzzer: 470, blackout: 330 },
+  { id: "chemistry", name: "Chemistry Education", sprint: 450, clash: 490, specialist: 580, puzzle: 410, buzzer: 450, blackout: 340 },
+  { id: "physics", name: "Physics Education", sprint: 460, clash: 470, specialist: 550, puzzle: 430, buzzer: 440, blackout: 230 },
+  { id: "mathematics", name: "Mathematics Education", sprint: 420, clash: 460, specialist: 520, puzzle: 470, buzzer: 420, blackout: 250 },
+  { id: "integratedscience", name: "Integrated Science", sprint: 390, clash: 420, specialist: 460, puzzle: 380, buzzer: 390, blackout: 250 },
+];
+
+const DEFAULT_NEWS = [
+  { id: "1", date: "May 25, 2026", title: "Registration Opens for DESCO 2.0", body: "Contestant and audience registration is now live. All Science Education departments are encouraged to register their best representatives before the deadline." },
+  { id: "2", date: "May 20, 2026", title: "Computer Science Joins The Lineup", body: "Computer Science Education has been added as the 8th competing cohort, expanding the field and raising the stakes for DESCO 2.0." },
+  { id: "3", date: "May 15, 2026", title: "New Round Revealed: Blackout Question", body: "DESCO 2.0 introduces the dramatic Blackout Question — a double-or-nothing finale where cohorts wager accumulated points on one final answer." },
+];
+
 // Idempotent schema bootstrap — runs once per cold start instance.
 let _schemaReady = null;
 async function ensureSchema() {
@@ -93,9 +125,38 @@ async function ensureSchema() {
           created_at INTEGER NOT NULL,
           expires_at INTEGER NOT NULL
         )`,
+        `CREATE TABLE IF NOT EXISTS cohort_scores (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          sprint REAL NOT NULL DEFAULT 0,
+          clash REAL NOT NULL DEFAULT 0,
+          specialist REAL NOT NULL DEFAULT 0,
+          puzzle REAL NOT NULL DEFAULT 0,
+          buzzer REAL NOT NULL DEFAULT 0,
+          blackout REAL NOT NULL DEFAULT 0
+        )`,
+        `CREATE TABLE IF NOT EXISTS news (
+          id TEXT PRIMARY KEY,
+          date TEXT NOT NULL,
+          title TEXT NOT NULL,
+          body TEXT NOT NULL
+        )`,
       ],
       "write",
     );
+
+    // Seed default scores if none exist
+    const existingScores = await db.select().from(cohortScoreTable);
+    if (existingScores.length === 0) {
+      await db.insert(cohortScoreTable).values(DEFAULT_SCORES);
+    }
+
+    // Seed default news if none exist
+    const existingNews = await db.select().from(newsTable);
+    if (existingNews.length === 0) {
+      await db.insert(newsTable).values(DEFAULT_NEWS);
+    }
+
     console.log("[api] schema bootstrap complete");
   })();
   return _schemaReady;
@@ -240,7 +301,75 @@ exports.handler = async (event) => {
       return jsonResponse(204, {});
     }
 
-    // ── Admin login ──
+    // ── Scores ──
+    if (path === "/scores") {
+      if (method === "GET") {
+        const rows = await db.select().from(cohortScoreTable);
+        return jsonResponse(200, rows);
+      }
+
+      if (method === "PUT") {
+        const body = JSON.parse(event.body || "{}");
+        const { scores } = body;
+        if (!Array.isArray(scores)) {
+          return errorResponse(400, "Invalid request body");
+        }
+
+        // Update each score one by one
+        for (const score of scores) {
+          await db.update(cohortScoreTable)
+            .set({
+              sprint: score.sprint,
+              clash: score.clash,
+              specialist: score.specialist,
+              puzzle: score.puzzle,
+              buzzer: score.buzzer,
+              blackout: score.blackout,
+            })
+            .where(eq(cohortScoreTable.id, score.id));
+        }
+
+        // Return updated scores
+        const updatedScores = await db.select().from(cohortScoreTable);
+        return jsonResponse(200, updatedScores);
+      }
+    }
+
+    if (path === "/scores/reset" && method === "POST") {
+      // Reset to defaults
+      await db.delete(cohortScoreTable);
+      await db.insert(cohortScoreTable).values(DEFAULT_SCORES);
+      const resetScores = await db.select().from(cohortScoreTable);
+      return jsonResponse(200, resetScores);
+    }
+
+    // ── News ──
+    if (path === "/news") {
+      if (method === "GET") {
+        const rows = await db.select().from(newsTable).orderBy(newsTable.date);
+        return jsonResponse(200, rows);
+      }
+
+      if (method === "POST") {
+        const body = JSON.parse(event.body || "{}");
+        const newItem = {
+          id: crypto.randomUUID(),
+          date: body.date,
+          title: body.title,
+          body: body.body,
+        };
+        await db.insert(newsTable).values(newItem);
+        return jsonResponse(201, newItem);
+      }
+    }
+
+    if (path.startsWith("/news/") && method === "DELETE") {
+      const id = path.split("/")[2];
+      await db.delete(newsTable).where(eq(newsTable.id, id));
+      return jsonResponse(204, {});
+    }
+
+  // ── Admin login ──
     if (path === "/admin/login" && method === "POST") {
       const body = JSON.parse(event.body || "{}");
       if (body.password !== ADMIN_PASSWORD) {
