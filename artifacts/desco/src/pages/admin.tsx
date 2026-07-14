@@ -7,15 +7,23 @@ import {
 } from "lucide-react";
 import {
   fetchRegistrants,
-  deleteRegistrant, clearRegistrants,
+  addRegistrant, deleteRegistrant, clearRegistrants,
   fetchScores, saveScores, resetScores, totalScore,
   fetchNews, addNews, deleteNews,
+  adminLogin, adminLogout, isAuthed, AuthError,
   type Registrant, type CohortScore, type NewsItem
 } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
-const ADMIN_PASSWORD = "desco2026"; // fallback, overridden by env
+// 5 official Science Education cohorts. No Computer Science.
+const COHORTS = [
+  "Biology Education",
+  "Chemistry Education",
+  "Physics Education",
+  "Mathematics Education",
+  "Integrated Science",
+];
+const LEVELS = ["100 Level", "200 Level", "300 Level", "400 Level", "500 Level"];
 
 type Tab = "overview" | "registrants" | "scores" | "news";
 
@@ -25,39 +33,27 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [pw, setPw] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(false);
-    
-    // Attempt API login
+    setSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/admin/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: pw }),
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        sessionStorage.setItem("desco_admin_token", data.token);
-        sessionStorage.setItem("desco_admin", "1");
-        onLogin();
-        return;
-      }
-    } catch (err) {
-      console.warn("API login failed, trying fallback:", err);
-    }
-
-    // Fallback to hardcoded password for local/offline/demo use
-    if (pw === ADMIN_PASSWORD) {
-      sessionStorage.setItem("desco_admin", "1");
+      await adminLogin(pw);
       onLogin();
-    } else {
+    } catch (err) {
+      console.error("Login failed:", err);
       setError(true);
-      toast({ title: "Access denied", description: "Incorrect password.", variant: "destructive" });
+      toast({
+        title: "Access denied",
+        description: err instanceof Error ? err.message : "Incorrect password.",
+        variant: "destructive",
+      });
       setPw("");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -101,10 +97,11 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
           </div>
           <button
             type="submit"
-            className="w-full py-3 rounded-xl bg-primary text-white font-bold glow-effect hover:bg-primary/90 transition-all"
+            disabled={submitting}
+            className="w-full py-3 rounded-xl bg-primary text-white font-bold glow-effect hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="button-admin-login"
           >
-            Access Dashboard
+            {submitting ? "Authenticating..." : "Access Dashboard"}
           </button>
           <div className="text-center">
             <Link href="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
@@ -197,12 +194,203 @@ function Overview({ registrants, scores, news }: { registrants: Registrant[]; sc
 
 // ── REGISTRANTS ───────────────────────────────────────────────────────────────
 
-function RegistrantsTab({ registrants, onDelete, onClear }: {
-  registrants: Registrant[]; onDelete: (id: string) => void; onClear: () => void;
+// Admin-only modal to register a contestant. The owner wanted to register
+// participants themselves (instead of a public form), so this lives here.
+// On submit, the API sends a confirmation email to the contestant's address.
+function AddContestantModal({ onClose, onAdded }: { onClose: () => void; onAdded: (r: Registrant) => void }) {
+  const { toast } = useToast();
+  const [form, setForm] = useState({
+    name: "", matric: "", dept: "", level: "", phone: "", email: "",
+  });
+  const [fileName, setFileName] = useState("");
+  const [passportBase64, setPassportBase64] = useState<string | null>(null);
+  const [passportError, setPassportError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  // Validate file size (max 5 MB) and type (jpeg/png/webp) before reading.
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassportError("");
+    const file = e.target.files?.[0];
+    if (!file) {
+      setFileName("");
+      setPassportBase64(null);
+      return;
+    }
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      setPassportError("Only JPG, PNG, or WebP images are allowed.");
+      setFileName("");
+      setPassportBase64(null);
+      e.target.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPassportError("File is too large. Maximum size is 5 MB.");
+      setFileName("");
+      setPassportBase64(null);
+      e.target.value = "";
+      return;
+    }
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (event) => setPassportBase64(event.target?.result as string);
+    reader.onerror = () => setPassportError("Could not read the file. Try another image.");
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passportBase64) {
+      setPassportError("A passport photograph is required.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const added = await addRegistrant({
+        id: crypto.randomUUID(),
+        type: "contestant",
+        name: form.name.trim(),
+        matric: form.matric.trim(),
+        department: form.dept,
+        level: form.level,
+        phone: form.phone.trim(),
+        email: form.email.trim().toLowerCase(),
+        passportBase64,
+        registeredAt: new Date().toISOString(),
+      });
+      toast({
+        title: "Contestant registered!",
+        description: `${added.name} has been added and will receive a confirmation email.`,
+      });
+      onAdded(added);
+      onClose();
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Registration failed",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const inputCls = "w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all text-sm";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="glass-card rounded-2xl border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
+        <div className="p-6 border-b border-white/10 flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10">
+          <div>
+            <h3 className="font-display font-bold text-xl">Add Contestant</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              The contestant will receive a confirmation email at the address you enter.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+            type="button"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <div className="grid sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-2 text-muted-foreground">Full Name <span className="text-destructive">*</span></label>
+              <input className={inputCls} placeholder="Contestant's full name" value={form.name} onChange={set("name")} required disabled={submitting} />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-2 text-muted-foreground">Matric Number <span className="text-destructive">*</span></label>
+              <input className={inputCls} placeholder="e.g. 190402001" value={form.matric} onChange={set("matric")} required disabled={submitting} />
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-2 text-muted-foreground">Cohort <span className="text-destructive">*</span></label>
+              <select className={inputCls} value={form.dept} onChange={set("dept")} required disabled={submitting}>
+                <option value="" className="bg-background">Select cohort</option>
+                {COHORTS.map((c) => <option key={c} value={c} className="bg-background">{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-2 text-muted-foreground">Level <span className="text-destructive">*</span></label>
+              <select className={inputCls} value={form.level} onChange={set("level")} required disabled={submitting}>
+                <option value="" className="bg-background">Select level</option>
+                {LEVELS.map((l) => <option key={l} value={l} className="bg-background">{l}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-2 text-muted-foreground">Phone Number <span className="text-destructive">*</span></label>
+              <input type="tel" className={inputCls} placeholder="+234..." value={form.phone} onChange={set("phone")} required disabled={submitting} />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-2 text-muted-foreground">Email Address <span className="text-destructive">*</span></label>
+              <input type="email" className={inputCls} placeholder="contestant@email.com" value={form.email} onChange={set("email")} required disabled={submitting} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-2 text-muted-foreground">Passport Photograph <span className="text-destructive">*</span></label>
+            <label
+              htmlFor="admin-passport-upload"
+              className="flex flex-col items-center gap-3 px-6 py-8 rounded-xl border-2 border-dashed border-white/15 hover:border-primary/40 cursor-pointer transition-all bg-white/3 hover:bg-primary/5 group"
+            >
+              <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                <Image size={22} />
+              </div>
+              {fileName ? (
+                <p className="text-primary text-sm font-semibold">{fileName}</p>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground text-center">Click to upload passport photo</p>
+                  <p className="text-xs text-muted-foreground/60">JPG, PNG, or WebP — max 5 MB</p>
+                </>
+              )}
+              <input id="admin-passport-upload" type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFile} disabled={submitting} />
+            </label>
+            {passportError && <p className="text-destructive text-xs mt-2">{passportError}</p>}
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 py-3 rounded-xl bg-primary text-white font-bold glow-effect hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? "Registering..." : "Register Contestant"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 rounded-xl glass-card border border-white/10 font-bold hover:bg-white/10 transition-all"
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
+function RegistrantsTab({ registrants, onDelete, onClear, onAdd }: {
+  registrants: Registrant[]; onDelete: (id: string) => void; onClear: () => void; onAdd: (r: Registrant) => void;
 }) {
   const [filter, setFilter] = useState<"all" | "contestant" | "audience">("all");
   const [confirmClear, setConfirmClear] = useState(false);
   const [selectedRegistrant, setSelectedRegistrant] = useState<Registrant | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const filtered = filter === "all" ? registrants : registrants.filter((r) => r.type === filter);
 
@@ -220,20 +408,28 @@ function RegistrantsTab({ registrants, onDelete, onClear }: {
             </button>
           ))}
         </div>
-        {!confirmClear ? (
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setConfirmClear(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-destructive border border-destructive/30 hover:bg-destructive/10 transition-all"
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-primary text-white glow-effect hover:bg-primary/90 transition-all"
           >
-            <Trash2 size={14} /> Clear All
+            <Plus size={14} /> Add Contestant
           </button>
-        ) : (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Are you sure?</span>
-            <button onClick={() => { onClear(); setConfirmClear(false); }} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-destructive text-white">Yes, clear</button>
-            <button onClick={() => setConfirmClear(false)} className="px-3 py-1.5 rounded-lg text-xs font-bold glass-card border border-white/10">Cancel</button>
-          </div>
-        )}
+          {!confirmClear ? (
+            <button
+              onClick={() => setConfirmClear(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-destructive border border-destructive/30 hover:bg-destructive/10 transition-all"
+            >
+              <Trash2 size={14} /> Clear All
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Are you sure?</span>
+              <button onClick={() => { onClear(); setConfirmClear(false); }} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-destructive text-white">Yes, clear</button>
+              <button onClick={() => setConfirmClear(false)} className="px-3 py-1.5 rounded-lg text-xs font-bold glass-card border border-white/10">Cancel</button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="glass-card rounded-2xl border border-white/10 overflow-hidden">
@@ -407,6 +603,13 @@ function RegistrantsTab({ registrants, onDelete, onClear }: {
             </div>
           </motion.div>
         </div>
+      )}
+
+      {showAddModal && (
+        <AddContestantModal
+          onClose={() => setShowAddModal(false)}
+          onAdded={(r) => onAdd(r)}
+        />
       )}
     </div>
   );
@@ -638,6 +841,16 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [news, setNews] = useState<NewsItem[]>([]);
   const { toast } = useToast();
 
+  // If an API call returns 401, clear auth and bounce to login.
+  const handleAuthError = (err: unknown): boolean => {
+    if (err instanceof AuthError) {
+      toast({ title: "Session expired", description: "Please log in again.", variant: "destructive" });
+      onLogout();
+      return true;
+    }
+    return false;
+  };
+
   const refresh = async () => {
     try {
       const [r, s, n] = await Promise.all([
@@ -650,6 +863,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       setNews(n);
     } catch (err) {
       console.error(err);
+      if (handleAuthError(err)) return;
       toast({
         title: "Failed to load data",
         description: err instanceof Error ? err.message : "Please check your network and try again.",
@@ -667,12 +881,18 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       toast({ title: "Registrant removed." });
     } catch (err) {
       console.error(err);
+      if (handleAuthError(err)) return;
       toast({
         title: "Failed to delete registrant",
         description: err instanceof Error ? err.message : "Please try again.",
         variant: "destructive",
       });
     }
+  };
+
+  const handleAddRegistrant = (r: Registrant) => {
+    // addRegistrant already ran in the modal; just update local state.
+    setRegistrants((prev) => [r, ...prev]);
   };
 
   const handleClearRegistrants = async () => {
@@ -682,6 +902,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       toast({ title: "All registrants cleared." });
     } catch (err) {
       console.error(err);
+      if (handleAuthError(err)) return;
       toast({
         title: "Failed to clear registrants",
         description: err instanceof Error ? err.message : "Please try again.",
@@ -691,25 +912,65 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   };
 
   const handleSaveScores = async (s: CohortScore[]) => {
-    await saveScores(s);
-    setScores(s);
+    try {
+      await saveScores(s);
+      setScores(s);
+    } catch (err) {
+      console.error(err);
+      if (handleAuthError(err)) return;
+      toast({
+        title: "Failed to save scores",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleResetScores = async () => {
-    const s = await resetScores();
-    setScores(s);
-    toast({ title: "Scores reset to defaults." });
+    try {
+      const s = await resetScores();
+      setScores(s);
+      toast({ title: "Scores reset to defaults." });
+    } catch (err) {
+      console.error(err);
+      if (handleAuthError(err)) return;
+      toast({
+        title: "Failed to reset scores",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddNews = async (item: Omit<NewsItem, "id">) => {
-    await addNews(item);
-    refresh();
+    try {
+      await addNews(item);
+      refresh();
+    } catch (err) {
+      console.error(err);
+      if (handleAuthError(err)) return;
+      toast({
+        title: "Failed to publish news",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteNews = async (id: string) => {
-    await deleteNews(id);
-    setNews((prev) => prev.filter((n) => n.id !== id));
-    toast({ title: "News item deleted." });
+    try {
+      await deleteNews(id);
+      setNews((prev) => prev.filter((n) => n.id !== id));
+      toast({ title: "News item deleted." });
+    } catch (err) {
+      console.error(err);
+      if (handleAuthError(err)) return;
+      toast({
+        title: "Failed to delete news",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
@@ -783,7 +1044,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           >
             <h2 className="font-display font-bold text-2xl mb-6 capitalize">{tab}</h2>
             {tab === "overview" && <Overview registrants={registrants} scores={scores} news={news} />}
-            {tab === "registrants" && <RegistrantsTab registrants={registrants} onDelete={handleDeleteRegistrant} onClear={handleClearRegistrants} />}
+            {tab === "registrants" && <RegistrantsTab registrants={registrants} onDelete={handleDeleteRegistrant} onClear={handleClearRegistrants} onAdd={handleAddRegistrant} />}
             {tab === "scores" && <ScoresTab scores={scores} onSave={handleSaveScores} onReset={handleResetScores} />}
             {tab === "news" && <NewsTab news={news} onAdd={handleAddNews} onDelete={handleDeleteNews} />}
           </motion.div>
@@ -796,10 +1057,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 // ── ROOT ──────────────────────────────────────────────────────────────────────
 
 export default function Admin() {
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem("desco_admin") === "1");
+  const [authed, setAuthed] = useState(() => isAuthed());
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("desco_admin");
+  const handleLogout = async () => {
+    await adminLogout();
     setAuthed(false);
   };
 

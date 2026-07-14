@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Layout } from "@/components/layout";
 import { Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -35,22 +35,84 @@ export default function Scoreboard() {
   const [scores, setScores] = useState<CohortScore[]>([]);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [animating, setAnimating] = useState(false);
+  // Track the previous rank of each cohort so we can show REAL trend arrows
+  // (up/down/same) instead of fake ones hardcoded by position.
+  const prevRanksRef = useRef<Record<string, number>>({});
+  const [trends, setTrends] = useState<Record<string, "up" | "down" | "same">>({});
 
   useEffect(() => {
     fetchScores().then(setScores);
   }, []);
 
+  // Poll every 5s, but PAUSE when the tab is hidden so we don't burn
+  // through the user's battery or rack up pointless function invocations.
   useEffect(() => {
-    const interval = setInterval(async () => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const tick = async () => {
       setAnimating(true);
       setTimeout(async () => {
-        const fresh = await fetchScores();
-        setScores(fresh);
-        setLastUpdate(new Date());
-        setAnimating(false);
+        try {
+          const fresh = await fetchScores();
+          // Compute real trends by comparing new ranks to previous ranks.
+          const newRanked = fresh
+            .map((s) => ({ name: s.name, total: totalScore(s) }))
+            .sort((a, b) => b.total - a.total);
+          const newRanks: Record<string, number> = {};
+          newRanked.forEach((r, i) => { newRanks[r.name] = i + 1; });
+
+          const newTrends: Record<string, "up" | "down" | "same"> = {};
+          for (const name of Object.keys(newRanks)) {
+            const prev = prevRanksRef.current[name];
+            if (prev === undefined) {
+              newTrends[name] = "same";
+            } else if (newRanks[name] < prev) {
+              newTrends[name] = "up"; // lower rank number = moved up
+            } else if (newRanks[name] > prev) {
+              newTrends[name] = "down";
+            } else {
+              newTrends[name] = "same";
+            }
+          }
+          prevRanksRef.current = newRanks;
+          setTrends(newTrends);
+          setScores(fresh);
+          setLastUpdate(new Date());
+        } catch (err) {
+          console.error("[scoreboard] fetch failed:", err);
+        } finally {
+          setAnimating(false);
+        }
       }, 300);
-    }, 5000);
-    return () => clearInterval(interval);
+    };
+
+    const start = () => {
+      if (!interval) interval = setInterval(tick, 5000);
+    };
+    const stop = () => {
+      if (interval) { clearInterval(interval); interval = null; }
+    };
+
+    // Start only if the tab is currently visible.
+    if (typeof document === "undefined" || !document.hidden) {
+      start();
+    }
+
+    const onVisibility = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        // Immediately refresh on return, then resume the interval.
+        tick();
+        start();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   const ranked = buildRankedScores(scores);
@@ -116,11 +178,11 @@ export default function Scoreboard() {
                   )}
                 </div>
 
-                {/* Change indicator placeholder */}
+                {/* Real trend indicator based on rank movement */}
                 <div className="shrink-0 hidden sm:block">
-                  {entry.rank <= 3 ? (
+                  {trends[entry.name] === "up" ? (
                     <TrendingUp size={18} className="text-green-400" />
-                  ) : entry.rank >= 7 ? (
+                  ) : trends[entry.name] === "down" ? (
                     <TrendingDown size={18} className="text-red-400" />
                   ) : (
                     <Minus size={18} className="text-muted-foreground" />
@@ -183,7 +245,7 @@ export default function Scoreboard() {
                       <td className="py-4 px-3 text-muted-foreground">{row.puzzle}</td>
                       <td className="py-4 px-3 text-muted-foreground">{row.buzzer}</td>
                       <td className={`py-4 px-3 font-bold ${row.blackout > 300 ? "text-green-400" : row.blackout < 220 ? "text-red-400" : "text-muted-foreground"}`}>
-                        +{row.blackout}
+                        {row.blackout > 0 ? `+${row.blackout}` : row.blackout}
                       </td>
                       <td className="py-4 px-3 font-display font-bold text-primary">{row.total.toLocaleString()}</td>
                     </tr>

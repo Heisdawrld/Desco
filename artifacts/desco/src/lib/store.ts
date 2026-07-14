@@ -59,7 +59,6 @@ const DEFAULT_SCORES: CohortScore[] = [
 
 const DEFAULT_NEWS: NewsItem[] = [
   { id: "1", date: "May 25, 2026", title: "Registration Opens for DESCO 2.0", body: "Contestant and audience registration is now live. All Science Education departments are encouraged to register their best representatives before the deadline." },
-  { id: "2", date: "May 20, 2026", title: "Computer Science Joins The Lineup", body: "Computer Science Education has been added as the 8th competing cohort, expanding the field and raising the stakes for DESCO 2.0." },
   { id: "3", date: "May 15, 2026", title: "New Round Revealed: Blackout Question", body: "DESCO 2.0 introduces the dramatic Blackout Question — a double-or-nothing finale where cohorts wager accumulated points on one final answer." },
 ];
 
@@ -80,22 +79,81 @@ function load<T>(key: string): T | null {
   } catch { return null; }
 }
 
+// ── Auth helpers ─────────────────────────────────────────────────────────────
+
+const TOKEN_KEY = "desco_admin_token";
+const AUTH_FLAG = "desco_admin";
+
+export function getAuthToken(): string | null {
+  try { return sessionStorage.getItem(TOKEN_KEY); } catch { return null; }
+}
+
+export function isAuthed(): boolean {
+  try {
+    return sessionStorage.getItem(AUTH_FLAG) === "1" && !!sessionStorage.getItem(TOKEN_KEY);
+  } catch { return false; }
+}
+
+export function clearAuth(): void {
+  try {
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(AUTH_FLAG);
+  } catch {}
+}
+
+/**
+ * Error thrown when the API returns 401. The admin dashboard should catch
+ * this and redirect to the login screen.
+ */
+export class AuthError extends Error {
+  constructor(message = "Session expired. Please log in again.") {
+    super(message);
+    this.name = "AuthError";
+  }
+}
+
 // ── API fetch wrapper ─────────────────────────────────────────────────────────
 
-async function api<T>(path: string, opts?: RequestInit): Promise<T> {
-  console.log(`[store] Calling API: ${API_BASE}${path}`);
-  const res = await fetch(`${API_BASE}${path}`, opts);
+type ApiOpts = RequestInit & { authed?: boolean };
+
+async function api<T>(path: string, opts?: ApiOpts): Promise<T> {
+  const { authed, headers: initHeaders, ...rest } = opts || {};
+  const headers: Record<string, string> = {
+    ...((initHeaders as Record<string, string>) || {}),
+  };
+
+  if (authed) {
+    const token = getAuthToken();
+    if (!token) {
+      clearAuth();
+      throw new AuthError();
+    }
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, { ...rest, headers });
+
+  if (res.status === 401) {
+    if (authed) clearAuth();
+    throw new AuthError();
+  }
+
   if (!res.ok) {
     const errorText = await res.text().catch(() => "");
     throw new Error(`API Error ${res.status}: ${errorText || res.statusText}`);
   }
-  return await res.json() as T;
+
+  // 204 No Content (or empty body) — return undefined cast to T.
+  if (res.status === 204) return undefined as T;
+  const text = await res.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text) as T;
 }
 
 // ── Registrants ───────────────────────────────────────────────────────────────
 
 export async function fetchRegistrants(): Promise<Registrant[]> {
-  const data = await api<Registrant[]>("/registrants");
+  const data = await api<Registrant[]>("/registrants", { authed: true });
   _registrants = data;
   persist("desco_registrants", data);
   return data;
@@ -106,10 +164,12 @@ export function getRegistrants(): Registrant[] {
 }
 
 export async function addRegistrant(r: Registrant): Promise<Registrant> {
+  // Contestant registrations require admin auth; audience is public.
   const data = await api<Registrant>("/registrants", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(r),
+    authed: r.type === "contestant",
   });
   _registrants = [data, ...(_registrants ?? [])];
   persist("desco_registrants", _registrants);
@@ -117,13 +177,13 @@ export async function addRegistrant(r: Registrant): Promise<Registrant> {
 }
 
 export async function deleteRegistrant(id: string): Promise<void> {
-  await api(`/registrants/${id}`, { method: "DELETE" });
+  await api(`/registrants/${id}`, { method: "DELETE", authed: true });
   _registrants = (_registrants ?? []).filter((r) => r.id !== id);
   persist("desco_registrants", _registrants);
 }
 
 export async function clearRegistrants(): Promise<void> {
-  await api("/registrants", { method: "DELETE" });
+  await api("/registrants", { method: "DELETE", authed: true });
   _registrants = [];
   persist("desco_registrants", []);
 }
@@ -149,6 +209,7 @@ export async function saveScores(scores: CohortScore[]): Promise<boolean> {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ scores }),
+    authed: true,
   });
   if (data) { 
     _scores = data; 
@@ -162,7 +223,7 @@ export async function saveScores(scores: CohortScore[]): Promise<boolean> {
 }
 
 export async function resetScores(): Promise<CohortScore[]> {
-  const data = await api<CohortScore[]>("/scores/reset", { method: "POST" });
+  const data = await api<CohortScore[]>("/scores/reset", { method: "POST", authed: true });
   if (data) { 
     _scores = data; 
     persist("desco_scores", data); 
@@ -176,6 +237,39 @@ export async function resetScores(): Promise<CohortScore[]> {
 
 export function totalScore(s: CohortScore) {
   return s.sprint + s.clash + s.specialist + s.puzzle + s.buzzer + s.blackout;
+}
+
+// ── Admin auth ───────────────────────────────────────────────────────────────
+
+export async function adminLogin(password: string): Promise<{ token: string; expiresAt: number }> {
+  const data = await api<{ token: string; expiresAt: number }>("/admin/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+  try {
+    sessionStorage.setItem(TOKEN_KEY, data.token);
+    sessionStorage.setItem(AUTH_FLAG, "1");
+  } catch {}
+  return data;
+}
+
+export async function adminLogout(): Promise<void> {
+  // Read the token BEFORE clearing, so we can still tell the server to delete
+  // its session row. Clear locally first so the user sees the login screen
+  // immediately even if the server call is slow.
+  const token = getAuthToken();
+  clearAuth();
+  if (token) {
+    try {
+      await fetch(`${API_BASE}/admin/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {
+      // Network error — we've already cleared locally, so this is best-effort.
+    }
+  }
 }
 
 // ── News ─────────────────────────────────────────────────────────────────────
@@ -205,6 +299,7 @@ export async function addNews(item: Omit<NewsItem, "id">): Promise<boolean> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(item),
+    authed: true,
   });
   if (data) {
     _news = [data, ..._news];
@@ -218,7 +313,7 @@ export async function addNews(item: Omit<NewsItem, "id">): Promise<boolean> {
 }
 
 export async function deleteNews(id: string): Promise<boolean> {
-  await api(`/news/${id}`, { method: "DELETE" });
+  await api(`/news/${id}`, { method: "DELETE", authed: true });
   _news = _news.filter((n) => n.id !== id);
   persist("desco_news", _news);
   return true;
