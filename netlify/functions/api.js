@@ -24,6 +24,7 @@ const { sqliteTable, text, integer } = require("drizzle-orm/sqlite-core");
 const { eq, desc } = require("drizzle-orm");
 const { z } = require("zod");
 const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const { Resend } = require("resend");
 
 // ── Env validation ──────────────────────────────────────────────────────────
@@ -44,15 +45,47 @@ if (!TURSO_AUTH_TOKEN) {
   );
 }
 
-// ADMIN_PASSWORD must be set in production. In dev, allow a fallback.
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+// ── Admin password config ───────────────────────────────────────────────────
+//
+// Two env vars are supported (set ONE of them in Netlify):
+//   1. ADMIN_PASSWORD_HASH  — bcrypt hash. Preferred for production.
+//                             Generate with: node scripts/gen-admin-hash.mjs
+//   2. ADMIN_PASSWORD       — plain text. Dev convenience only.
+//
+// If both are set, the hash wins. If neither is set in production, the
+// function throws on cold start so the API fails loudly (better than
+// silently authenticating everyone).
+
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
+const ADMIN_PASSWORD_PLAIN = process.env.ADMIN_PASSWORD;
 const DEV_PASSWORD = "desco2026";
-if (IS_PROD && !ADMIN_PASSWORD) {
+// IS_PROD is declared above (near TURSO_DATABASE_URL) — reused here.
+
+if (IS_PROD && !ADMIN_PASSWORD_HASH && !ADMIN_PASSWORD_PLAIN) {
   throw new Error(
-    "ADMIN_PASSWORD is not set. Configure a strong password in the Netlify dashboard before deploying to production.",
+    "ADMIN_PASSWORD_HASH (preferred, bcrypt) or ADMIN_PASSWORD (plain) is not set. " +
+    "Configure it in the Netlify dashboard before deploying to production. " +
+    "Generate a hash with: node scripts/gen-admin-hash.mjs",
   );
 }
-const EFFECTIVE_PASSWORD = ADMIN_PASSWORD || DEV_PASSWORD;
+
+/**
+ * Verify a submitted password against the configured env var.
+ * Supports both bcrypt hash (preferred) and plain text (legacy/dev).
+ */
+async function verifyAdminPassword(submitted) {
+  if (!submitted) return false;
+  if (ADMIN_PASSWORD_HASH) {
+    try {
+      return await bcrypt.compare(submitted, ADMIN_PASSWORD_HASH);
+    } catch (err) {
+      console.error("[api] bcrypt compare failed:", err);
+      return false;
+    }
+  }
+  // Plain text fallback (dev only).
+  return submitted === (ADMIN_PASSWORD_PLAIN || DEV_PASSWORD);
+}
 
 // CORS allowlist. Set CORS_ALLOWED_ORIGINS in Netlify env to your production
 // domain(s). The new domain is included as a fallback so the site works even
@@ -107,6 +140,19 @@ const newsTable = sqliteTable("news", {
   body: text("body").notNull(),
 });
 
+// Audit log of every email attempt — lets the admin see whether the
+// confirmation email actually went out (and why if it didn't).
+const emailLogTable = sqliteTable("email_log", {
+  id: text("id").primaryKey(),
+  registrantId: text("registrant_id"),
+  recipient: text("recipient").notNull(),
+  type: text("type", { enum: ["student_confirmation", "admin_notification", "test"] }).notNull(),
+  status: text("status", { enum: ["queued", "sent", "failed"] }).notNull().default("queued"),
+  error: text("error"),
+  attempts: integer("attempts").notNull().default(0),
+  sentAt: text("sent_at").notNull(),
+});
+
 const DEFAULT_SCORES = [
   { id: "biology", name: "Biology Education", sprint: 480, clash: 520, specialist: 610, puzzle: 440, buzzer: 470, blackout: 330 },
   { id: "chemistry", name: "Chemistry Education", sprint: 450, clash: 490, specialist: 580, puzzle: 410, buzzer: 450, blackout: 340 },
@@ -159,6 +205,16 @@ async function ensureSchema() {
           date TEXT NOT NULL,
           title TEXT NOT NULL,
           body TEXT NOT NULL
+        )`,
+        `CREATE TABLE IF NOT EXISTS email_log (
+          id TEXT PRIMARY KEY,
+          registrant_id TEXT,
+          recipient TEXT NOT NULL,
+          type TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'queued',
+          error TEXT,
+          attempts INTEGER NOT NULL DEFAULT 0,
+          sent_at TEXT NOT NULL
         )`,
       ],
       "write",
@@ -340,13 +396,114 @@ function emailShell({ preheader, heroTitle, heroSubtitle, bodyHtml }) {
 </html>`;
 }
 
+// ── Email sender with audit log + retry ─────────────────────────────────────
+//
+// All outbound email goes through this wrapper so the admin can see exactly
+// what happened (queued → sent | failed) and re-send manually if needed.
+//
+// Retry strategy:
+//   - 3 attempts max with 800ms / 1800ms backoff.
+//   - Retries on network errors and 5xx responses from Resend.
+//   - Does NOT retry on 4xx (recipient rejected, sandbox-only, etc.) —
+//     those failures are permanent and would just burn through quota.
+//   - Each attempt updates the email_log row so the admin can see progress.
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function isRetryableError(err) {
+  if (!err) return false;
+  // Resend errors usually expose a `statusCode` or `response.status`.
+  const status = err.statusCode || err.status || (err.response && err.response.status);
+  if (typeof status === "number") {
+    // Retry on 5xx and 429 (rate limit). Don't retry on 4xx (client error).
+    return status >= 500 || status === 429;
+  }
+  // No status — assume it's a network error, retry it.
+  return true;
+}
+
+async function sendEmailWithRetry({ type, to, subject, html, registrantId }) {
+  // Create the log row first so we have a handle even if the send fails
+  // before any attempt completes.
+  const logId = crypto.randomUUID();
+  const sentAt = new Date().toISOString();
+  try {
+    await db.insert(emailLogTable).values({
+      id: logId,
+      registrantId: registrantId || null,
+      recipient: to,
+      type,
+      status: "queued",
+      error: null,
+      attempts: 0,
+      sentAt,
+    });
+  } catch (e) {
+    // If we can't even log, fall back to console-only send (best effort).
+    console.error("[api] email_log insert failed:", e);
+  }
+
+  if (!resend) {
+    const msg = "RESEND_API_KEY not set";
+    console.warn(`[api] ${msg} — marking ${logId} as failed`);
+    try {
+      await db.update(emailLogTable).set({ status: "failed", error: msg, attempts: 0 }).where(eq(emailLogTable.id, logId));
+    } catch {}
+    return { logId, status: "failed", error: msg };
+  }
+
+  const MAX_ATTEMPTS = 3;
+  let lastErr = null;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      // Update attempt count BEFORE the send so the admin sees "in progress".
+      try {
+        await db.update(emailLogTable).set({ attempts: attempt }).where(eq(emailLogTable.id, logId));
+      } catch {}
+
+      const result = await resend.emails.send({
+        from: MAIL_FROM,
+        to,
+        replyTo: EVENT_CONFIG.replyTo,
+        subject,
+        html,
+      });
+
+      // Resend returns { id, ... } on success. Some SDKs return { data, error }.
+      const apiErr = result && (result.error || (result.data && result.data.error));
+      if (apiErr) throw apiErr;
+
+      console.log(`[api] email ${logId} sent to ${to} (attempt ${attempt})`);
+      try {
+        await db.update(emailLogTable).set({ status: "sent", attempts: attempt, error: null }).where(eq(emailLogTable.id, logId));
+      } catch {}
+      return { logId, status: "sent" };
+    } catch (err) {
+      lastErr = err;
+      const msg = err && err.message ? err.message : String(err);
+      console.error(`[api] email ${logId} attempt ${attempt} failed:`, msg);
+      try {
+        await db.update(emailLogTable).set({ attempts: attempt, error: msg }).where(eq(emailLogTable.id, logId));
+      } catch {}
+
+      if (!isRetryableError(err) || attempt === MAX_ATTEMPTS) break;
+      // Backoff: 800ms, then 1800ms.
+      await sleep(800 * attempt);
+    }
+  }
+
+  // All retries exhausted.
+  const finalMsg = lastErr && lastErr.message ? lastErr.message : "Unknown error";
+  try {
+    await db.update(emailLogTable).set({ status: "failed", error: finalMsg }).where(eq(emailLogTable.id, logId));
+  } catch {}
+  return { logId, status: "failed", error: finalMsg };
+}
+
 // ── Admin notification (internal) ───────────────────────────────────────────
 
 async function sendAdminNotificationEmail(registrant) {
-  if (!resend) {
-    console.log("[api] RESEND_API_KEY not set — skipping admin email");
-    return;
-  }
   const isContestant = registrant.type === "contestant";
   const subject = isContestant
     ? `[DESCO] New Contestant — ${registrant.name}`
@@ -377,28 +534,18 @@ async function sendAdminNotificationEmail(registrant) {
         <strong>DESCO 2.0 Admin Notification</strong>
       </p>
     </div>`;
-  try {
-    await resend.emails.send({
-      from: MAIL_FROM,
-      to: ADMIN_EMAIL,
-      replyTo: EVENT_CONFIG.replyTo,
-      subject,
-      html,
-    });
-    console.log(`[api] admin notification sent to ${ADMIN_EMAIL}`);
-  } catch (err) {
-    console.error("[api] admin email send failed:", err);
-  }
+  await sendEmailWithRetry({
+    type: "admin_notification",
+    to: ADMIN_EMAIL,
+    subject,
+    html,
+    registrantId: registrant.id,
+  });
 }
 
 // ── Student confirmation email ──────────────────────────────────────────────
 
 async function sendStudentConfirmationEmail(registrant) {
-  if (!resend) {
-    console.log("[api] RESEND_API_KEY not set — skipping student email");
-    return;
-  }
-
   const isContestant = registrant.type === "contestant";
   const firstName = (registrant.name || "there").split(" ")[0];
 
@@ -478,20 +625,13 @@ async function sendStudentConfirmationEmail(registrant) {
 
   const html = emailShell({ preheader, heroTitle, heroSubtitle, bodyHtml });
 
-  try {
-    await resend.emails.send({
-      from: MAIL_FROM,
-      to: registrant.email,
-      replyTo: EVENT_CONFIG.replyTo,
-      subject,
-      html,
-    });
-    console.log(`[api] student confirmation sent to ${registrant.email}`);
-  } catch (err) {
-    // Log but don't fail the registration. Common cause: MAIL_FROM is the
-    // Resend sandbox sender and the recipient isn't the account owner.
-    console.error(`[api] student email to ${registrant.email} failed:`, err.message || err);
-  }
+  return sendEmailWithRetry({
+    type: "student_confirmation",
+    to: registrant.email,
+    subject,
+    html,
+    registrantId: registrant.id,
+  });
 }
 
 // ── CORS & Response helpers ─────────────────────────────────────────────────
@@ -725,10 +865,95 @@ exports.handler = async (event) => {
       return json(204, {});
     }
 
+    // ── Email audit log + manual resend (admin-only) ──
+    //
+    // These routes let the admin see whether each confirmation email actually
+    // went out, what error Resend returned if it didn't, and manually re-send
+    // a confirmation to a specific registrant (e.g. when a student says
+    // "I never got my email").
+
+    if (path === "/admin/emails" && method === "GET") {
+      const authErr = await requireAuth();
+      if (authErr) return authErr;
+      // Last 200 email attempts, newest first.
+      const rows = await db.select().from(emailLogTable).orderBy(desc(emailLogTable.sentAt)).limit(200);
+      return json(200, rows);
+    }
+
+    if (path === "/admin/emails/config" && method === "GET") {
+      const authErr = await requireAuth();
+      if (authErr) return authErr;
+      // Tell the admin whether Resend is configured and what sender is being
+      // used. Helpful for debugging "no emails received" reports.
+      return json(200, {
+        resendConfigured: !!resend,
+        mailFrom: MAIL_FROM,
+        adminNotifyEmail: ADMIN_EMAIL,
+        replyTo: EVENT_CONFIG.replyTo,
+        usingSandboxSender: MAIL_FROM.includes("onboarding@resend.dev"),
+      });
+    }
+
+    if (path === "/admin/emails/test" && method === "POST") {
+      const authErr = await requireAuth();
+      if (authErr) return authErr;
+      // Send a test email to ADMIN_EMAIL so the admin can verify Resend
+      // is wired up correctly before competition day.
+      const body = JSON.parse(event.body || "{}");
+      const target = (body.to && String(body.to).trim()) || ADMIN_EMAIL;
+      const subject = `[DESCO] Test Email — ${new Date().toISOString()}`;
+      const html = emailShell({
+        preheader: "This is a test email from the DESCO 2.0 admin dashboard.",
+        heroTitle: "Test Email",
+        heroSubtitle: "If you can read this, Resend is configured correctly.",
+        bodyHtml: `
+          <p style="margin:0 0 16px;">Hi,</p>
+          <p style="margin:0 0 16px;">
+            This is a test email sent from the DESCO 2.0 admin dashboard.
+            If you're reading it, the Resend integration is working and your
+            <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;color:#c4b5fd;">MAIL_FROM</code>
+            sender is verified.
+          </p>
+          <p style="margin:0;color:#a1a1aa;font-size:13px;">
+            Sent at: <strong style="color:#fff;">${new Date().toLocaleString()}</strong><br>
+            Sender: <strong style="color:#fff;">${MAIL_FROM}</strong>
+          </p>`,
+      });
+      const result = await sendEmailWithRetry({
+        type: "test",
+        to: target,
+        subject,
+        html,
+        registrantId: null,
+      });
+      return json(result.status === "sent" ? 200 : 500, result);
+    }
+
+    // Re-send the student confirmation email to a specific registrant.
+    // Path: /admin/emails/resend-registration/<registrantId>
+    if (path.startsWith("/admin/emails/resend-registration/") && method === "POST") {
+      const authErr = await requireAuth();
+      if (authErr) return authErr;
+      const registrantId = path.split("/").pop();
+      if (!registrantId) return err(400, "Missing registrant ID");
+
+      const rows = await db.select().from(registrantTable).where(eq(registrantTable.id, registrantId)).limit(1);
+      if (rows.length === 0) return err(404, "Registrant not found");
+      const registrant = rows[0];
+
+      // sendStudentConfirmationEmail returns { logId, status, error? }.
+      const result = await sendStudentConfirmationEmail(registrant);
+      return json(result.status === "sent" ? 200 : 500, {
+        registrant: { id: registrant.id, name: registrant.name, email: registrant.email },
+        email: result,
+      });
+    }
+
     // ── Admin login (public) ──
     if (path === "/admin/login" && method === "POST") {
       const body = JSON.parse(event.body || "{}");
-      if (!body.password || body.password !== EFFECTIVE_PASSWORD) {
+      const ok = await verifyAdminPassword(body.password);
+      if (!ok) {
         return err(401, "Invalid password");
       }
       const token = crypto.randomBytes(32).toString("hex");

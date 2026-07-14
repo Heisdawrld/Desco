@@ -47,6 +47,29 @@ export type NewsItem = {
   body: string;
 };
 
+// ── Email audit log ─────────────────────────────────────────────────────────
+// Mirrors the `email_log` table on the backend. Lets the admin see whether
+// each confirmation email actually went out, and the error if it didn't.
+
+export type EmailLogEntry = {
+  id: string;
+  registrantId: string | null;
+  recipient: string;
+  type: "student_confirmation" | "admin_notification" | "test";
+  status: "queued" | "sent" | "failed";
+  error: string | null;
+  attempts: number;
+  sentAt: string;
+};
+
+export type EmailConfig = {
+  resendConfigured: boolean;
+  mailFrom: string;
+  adminNotifyEmail: string;
+  replyTo: string;
+  usingSandboxSender: boolean;
+};
+
 // ── Fallback defaults for offline/SSR ────────────────────────────────────────
 
 const DEFAULT_SCORES: CohortScore[] = [
@@ -319,4 +342,32 @@ export async function deleteNews(id: string): Promise<boolean> {
   _news = _news.filter((n) => n.id !== id);
   persist("desco_news", _news);
   return true;
+}
+
+// ── Email audit + resend (admin-only) ────────────────────────────────────────
+
+export async function fetchEmailLogs(): Promise<EmailLogEntry[]> {
+  return api<EmailLogEntry[]>("/admin/emails", { authed: true });
+}
+
+export async function fetchEmailConfig(): Promise<EmailConfig> {
+  return api<EmailConfig>("/admin/emails/config", { authed: true });
+}
+
+export async function sendTestEmail(to?: string): Promise<{ logId: string; status: string; error?: string }> {
+  return api<{ logId: string; status: string; error?: string }>("/admin/emails/test", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ to: to || "" }),
+    authed: true,
+  });
+}
+
+export async function resendRegistrationEmail(
+  registrantId: string,
+): Promise<{ registrant: { id: string; name: string; email: string }; email: { logId: string; status: string; error?: string } }> {
+  return api(`/admin/emails/resend-registration/${registrantId}`, {
+    method: "POST",
+    authed: true,
+  });
 }

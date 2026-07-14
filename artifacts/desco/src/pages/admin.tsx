@@ -3,15 +3,18 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import {
   Users, UserCheck, Trophy, Newspaper, Trash2, Plus, Save, RotateCcw,
-  LogOut, ChevronRight, Eye, EyeOff, ArrowLeft, X, Image, Calendar, Phone, Mail, User, GraduationCap, Hash
+  LogOut, ChevronRight, Eye, EyeOff, ArrowLeft, X, Image, Calendar, Phone, Mail, User, GraduationCap, Hash,
+  MailCheck, AlertCircle, Send, RefreshCw, Clock, CheckCircle2, XCircle
 } from "lucide-react";
 import {
   fetchRegistrants,
   addRegistrant, deleteRegistrant, clearRegistrants,
   fetchScores, saveScores, resetScores, totalScore,
   fetchNews, addNews, deleteNews,
+  fetchEmailLogs, fetchEmailConfig, sendTestEmail, resendRegistrationEmail,
   adminLogin, adminLogout, isAuthed, AuthError,
-  type Registrant, type CohortScore, type NewsItem
+  type Registrant, type CohortScore, type NewsItem,
+  type EmailLogEntry, type EmailConfig,
 } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 import { safeUUID } from "@/lib/uuid";
@@ -26,7 +29,7 @@ const COHORTS = [
 ];
 const LEVELS = ["100 Level", "200 Level", "300 Level", "400 Level", "500 Level"];
 
-type Tab = "overview" | "registrants" | "scores" | "news";
+type Tab = "overview" | "registrants" | "scores" | "news" | "emails";
 
 // ── LOGIN ────────────────────────────────────────────────────────────────────
 
@@ -385,13 +388,15 @@ function AddContestantModal({ onClose, onAdded }: { onClose: () => void; onAdded
   );
 }
 
-function RegistrantsTab({ registrants, onDelete, onClear, onAdd }: {
+function RegistrantsTab({ registrants, onDelete, onClear, onAdd, onResendEmail }: {
   registrants: Registrant[]; onDelete: (id: string) => void; onClear: () => void; onAdd: (r: Registrant) => void;
+  onResendEmail: (r: Registrant) => Promise<void>;
 }) {
   const [filter, setFilter] = useState<"all" | "contestant" | "audience">("all");
   const [confirmClear, setConfirmClear] = useState(false);
   const [selectedRegistrant, setSelectedRegistrant] = useState<Registrant | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const filtered = filter === "all" ? registrants : registrants.filter((r) => r.type === filter);
 
@@ -584,7 +589,22 @@ function RegistrantsTab({ registrants, onDelete, onClear, onAdd }: {
                 </div>
               </div>
 
-              <div className="pt-4 flex gap-3">
+              <div className="pt-4 flex gap-3 flex-wrap">
+                <button
+                  onClick={async () => {
+                    setResending(true);
+                    try {
+                      await onResendEmail(selectedRegistrant);
+                    } finally {
+                      setResending(false);
+                    }
+                  }}
+                  disabled={resending}
+                  className="flex-1 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {resending ? <RefreshCw size={18} className="animate-spin" /> : <Send size={18} />}
+                  {resending ? "Sending…" : "Resend Confirmation Email"}
+                </button>
                 <button
                   onClick={() => {
                     onDelete(selectedRegistrant.id);
@@ -833,6 +853,216 @@ function NewsTab({ news, onAdd, onDelete }: {
   );
 }
 
+// ── EMAILS ───────────────────────────────────────────────────────────────────
+
+function StatusBadge({ status }: { status: EmailLogEntry["status"] }) {
+  const map = {
+    sent: { icon: <CheckCircle2 size={12} />, cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", label: "Sent" },
+    failed: { icon: <XCircle size={12} />, cls: "bg-red-500/10 text-red-400 border-red-500/20", label: "Failed" },
+    queued: { icon: <Clock size={12} />, cls: "bg-amber-500/10 text-amber-400 border-amber-500/20", label: "Queued" },
+  }[status];
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-semibold ${map.cls}`}>
+      {map.icon} {map.label}
+    </span>
+  );
+}
+
+function EmailsTab({ logs, config, onRefresh }: {
+  logs: EmailLogEntry[];
+  config: EmailConfig | null;
+  onRefresh: () => void;
+}) {
+  const { toast } = useToast();
+  const [testEmailTarget, setTestEmailTarget] = useState("");
+  const [sendingTest, setSendingTest] = useState(false);
+
+  const handleTestEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSendingTest(true);
+    try {
+      const result = await sendTestEmail(testEmailTarget.trim() || undefined);
+      if (result.status === "sent") {
+        toast({
+          title: "Test email sent!",
+          description: `Check the inbox of ${testEmailTarget.trim() || config?.adminNotifyEmail || "the admin email"}.`,
+        });
+        setTestEmailTarget("");
+      } else {
+        toast({
+          title: "Test email failed",
+          description: result.error || "See the email log for details.",
+          variant: "destructive",
+        });
+      }
+      onRefresh();
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Failed to send test email",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingTest(false);
+    }
+  };
+
+  const sent = logs.filter((l) => l.status === "sent").length;
+  const failed = logs.filter((l) => l.status === "failed").length;
+  const queued = logs.filter((l) => l.status === "queued").length;
+
+  return (
+    <div className="space-y-6">
+      {/* Config card */}
+      <div className="glass-card rounded-2xl p-6 border border-white/10">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h3 className="font-display font-bold text-lg mb-1 flex items-center gap-2">
+              <MailCheck size={18} className="text-primary" />
+              Resend Email Configuration
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Verify the email service is wired up before competition day.
+            </p>
+          </div>
+          <button
+            onClick={onRefresh}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold glass-card border border-white/10 hover:bg-white/10 transition-all"
+          >
+            <RefreshCw size={12} /> Refresh
+          </button>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-3 mt-5">
+          <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Resend API Key</p>
+            {config ? (
+              config.resendConfigured ? (
+                <p className="text-sm font-semibold text-emerald-400 flex items-center gap-1.5">
+                  <CheckCircle2 size={14} /> Configured
+                </p>
+              ) : (
+                <p className="text-sm font-semibold text-red-400 flex items-center gap-1.5">
+                  <AlertCircle size={14} /> Not set — emails will fail
+                </p>
+              )
+            ) : (
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            )}
+          </div>
+
+          <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Sender Address</p>
+            <p className="text-sm font-mono break-all">{config?.mailFrom ?? "—"}</p>
+            {config?.usingSandboxSender && (
+              <p className="text-xs text-amber-400 mt-1 flex items-center gap-1">
+                <AlertCircle size={12} /> Sandbox sender — only delivers to the Resend account owner.
+                Set <code className="bg-white/10 px-1 rounded">MAIL_FROM</code> to a verified sender for production.
+              </p>
+            )}
+          </div>
+
+          <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Admin Notification Email</p>
+            <p className="text-sm font-mono break-all">{config?.adminNotifyEmail ?? "—"}</p>
+          </div>
+
+          <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Reply-To Address</p>
+            <p className="text-sm font-mono break-all">{config?.replyTo ?? "—"}</p>
+          </div>
+        </div>
+
+        {/* Test email form */}
+        <form onSubmit={handleTestEmail} className="mt-5 pt-5 border-t border-white/10 flex flex-wrap items-end gap-3">
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-muted-foreground">
+              Send Test Email To (optional)
+            </label>
+            <input
+              type="email"
+              placeholder={config?.adminNotifyEmail || "admin@example.com"}
+              value={testEmailTarget}
+              onChange={(e) => setTestEmailTarget(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all text-sm"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={sendingTest}
+            className="px-5 py-2.5 rounded-lg text-sm font-bold bg-primary text-white glow-effect hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-2"
+          >
+            {sendingTest ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
+            {sendingTest ? "Sending…" : "Send Test Email"}
+          </button>
+        </form>
+      </div>
+
+      {/* Stats strip */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="glass-card rounded-xl p-4 border border-emerald-500/20 text-center">
+          <div className="text-2xl font-display font-bold text-emerald-400">{sent}</div>
+          <div className="text-xs text-muted-foreground uppercase tracking-wider">Sent</div>
+        </div>
+        <div className="glass-card rounded-xl p-4 border border-amber-500/20 text-center">
+          <div className="text-2xl font-display font-bold text-amber-400">{queued}</div>
+          <div className="text-xs text-muted-foreground uppercase tracking-wider">Queued</div>
+        </div>
+        <div className="glass-card rounded-xl p-4 border border-red-500/20 text-center">
+          <div className="text-2xl font-display font-bold text-red-400">{failed}</div>
+          <div className="text-xs text-muted-foreground uppercase tracking-wider">Failed</div>
+        </div>
+      </div>
+
+      {/* Email log table */}
+      <div className="glass-card rounded-2xl border border-white/10 overflow-hidden">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <h3 className="font-display font-bold text-sm">Email Audit Log</h3>
+          <span className="text-xs text-muted-foreground">Last 200 attempts</span>
+        </div>
+        {logs.length === 0 ? (
+          <div className="py-12 text-center text-muted-foreground text-sm">
+            No emails sent yet. Registrations will trigger confirmation emails automatically.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px]">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/2">
+                  {["Status", "Recipient", "Type", "Attempts", "Sent At", "Error"].map((h) => (
+                    <th key={h} className="text-left py-3 px-4 text-xs uppercase tracking-widest text-muted-foreground font-semibold">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id} className="border-b border-white/5 hover:bg-white/2 transition-colors">
+                    <td className="py-3 px-4"><StatusBadge status={log.status} /></td>
+                    <td className="py-3 px-4 text-sm font-mono">{log.recipient}</td>
+                    <td className="py-3 px-4 text-xs text-muted-foreground">
+                      {log.type === "student_confirmation" ? "Student Confirmation" :
+                       log.type === "admin_notification" ? "Admin Notification" :
+                       log.type === "test" ? "Test Email" : log.type}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground">{log.attempts}</td>
+                    <td className="py-3 px-4 text-xs text-muted-foreground">
+                      {new Date(log.sentAt).toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 text-xs text-red-400 max-w-xs truncate" title={log.error || ""}>
+                      {log.error || "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN DASHBOARD ────────────────────────────────────────────────────────────
 
 function Dashboard({ onLogout }: { onLogout: () => void }) {
@@ -840,6 +1070,8 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [registrants, setRegistrants] = useState<Registrant[]>([]);
   const [scores, setScores] = useState<CohortScore[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [emailLogs, setEmailLogs] = useState<EmailLogEntry[]>([]);
+  const [emailConfig, setEmailConfig] = useState<EmailConfig | null>(null);
   const { toast } = useToast();
 
   // If an API call returns 401, clear auth and bounce to login.
@@ -872,6 +1104,31 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       });
     }
   };
+
+  // Email tab loads independently — only when the user actually opens it,
+  // so the initial dashboard load doesn't pay for two extra API calls.
+  const refreshEmails = async () => {
+    try {
+      const [logs, cfg] = await Promise.all([
+        fetchEmailLogs(),
+        fetchEmailConfig(),
+      ]);
+      setEmailLogs(logs);
+      setEmailConfig(cfg);
+    } catch (err) {
+      console.error(err);
+      if (handleAuthError(err)) return;
+      toast({
+        title: "Failed to load email data",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (tab === "emails") refreshEmails();
+  }, [tab]);
 
   useEffect(() => { refresh(); }, []);
 
@@ -974,11 +1231,41 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     }
   };
 
+  const handleResendEmail = async (r: Registrant) => {
+    try {
+      const result = await resendRegistrationEmail(r.id);
+      if (result.email.status === "sent") {
+        toast({
+          title: "Confirmation email resent!",
+          description: `A new confirmation was sent to ${result.registrant.email}.`,
+        });
+      } else {
+        toast({
+          title: "Resend failed",
+          description: result.email.error || "See the Emails tab for details.",
+          variant: "destructive",
+        });
+      }
+      // If the user is currently on the emails tab, refresh the log so the
+      // new entry is visible immediately.
+      if (tab === "emails") refreshEmails();
+    } catch (err) {
+      console.error(err);
+      if (handleAuthError(err)) return;
+      toast({
+        title: "Failed to resend email",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "overview", label: "Overview", icon: <Eye size={16} /> },
     { key: "registrants", label: "Registrants", icon: <Users size={16} /> },
     { key: "scores", label: "Scores", icon: <Trophy size={16} /> },
     { key: "news", label: "News", icon: <Newspaper size={16} /> },
+    { key: "emails", label: "Emails", icon: <MailCheck size={16} /> },
   ];
 
   return (
@@ -1045,9 +1332,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           >
             <h2 className="font-display font-bold text-2xl mb-6 capitalize">{tab}</h2>
             {tab === "overview" && <Overview registrants={registrants} scores={scores} news={news} />}
-            {tab === "registrants" && <RegistrantsTab registrants={registrants} onDelete={handleDeleteRegistrant} onClear={handleClearRegistrants} onAdd={handleAddRegistrant} />}
+            {tab === "registrants" && <RegistrantsTab registrants={registrants} onDelete={handleDeleteRegistrant} onClear={handleClearRegistrants} onAdd={handleAddRegistrant} onResendEmail={handleResendEmail} />}
             {tab === "scores" && <ScoresTab scores={scores} onSave={handleSaveScores} onReset={handleResetScores} />}
             {tab === "news" && <NewsTab news={news} onAdd={handleAddNews} onDelete={handleDeleteNews} />}
+            {tab === "emails" && <EmailsTab logs={emailLogs} config={emailConfig} onRefresh={refreshEmails} />}
           </motion.div>
         </main>
       </div>
