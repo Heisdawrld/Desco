@@ -53,11 +53,27 @@ export default function Contact() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
+
+    // Build a mailto: link so the user's own email client opens with the
+    // message prefilled. This guarantees the message actually reaches the
+    // organizing team (no backend email relay needed) and the sender's
+    // real reply-to address is correct.
+    const to = "desco@ulsesa.unilag.edu.ng";
+    const subject = form.subject || "DESCO 2.0 Inquiry";
+    const body = `Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`;
+    const mailto = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    // Small delay so the user sees the "Opening email..." state before
+    // the mail client takes over.
     setTimeout(() => {
+      window.location.href = mailto;
       setSending(false);
-      toast({ title: "Message sent!", description: "We'll respond within 24 hours." });
+      toast({
+        title: "Opening your email app...",
+        description: "If nothing happened, email us directly at desco@ulsesa.unilag.edu.ng",
+      });
       setForm({ name: "", email: "", subject: "", message: "" });
-    }, 1200);
+    }, 400);
   };
 
   return (

@@ -164,16 +164,27 @@ async function ensureSchema() {
       "write",
     );
 
-    // Seed default scores if none exist
+    // Seed default scores if none exist. Use INSERT OR IGNORE via raw SQL so
+    // that two concurrent cold starts don't race and double-insert.
     const existingScores = await db.select().from(cohortScoreTable);
     if (existingScores.length === 0) {
-      await db.insert(cohortScoreTable).values(DEFAULT_SCORES);
+      for (const s of DEFAULT_SCORES) {
+        await client.execute({
+          sql: `INSERT OR IGNORE INTO cohort_scores (id, name, sprint, clash, specialist, puzzle, buzzer, blackout) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [s.id, s.name, s.sprint, s.clash, s.specialist, s.puzzle, s.buzzer, s.blackout],
+        });
+      }
     }
 
-    // Seed default news if none exist
+    // Seed default news if none exist.
     const existingNews = await db.select().from(newsTable);
     if (existingNews.length === 0) {
-      await db.insert(newsTable).values(DEFAULT_NEWS);
+      for (const n of DEFAULT_NEWS) {
+        await client.execute({
+          sql: `INSERT OR IGNORE INTO news (id, date, title, body) VALUES (?, ?, ?, ?)`,
+          args: [n.id, n.date, n.title, n.body],
+        });
+      }
     }
 
     // Self-healing: delete the erroneous "Computer Science Joins The Lineup"

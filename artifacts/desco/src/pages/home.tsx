@@ -21,7 +21,10 @@ const ROUNDS = [
   { num: "06", name: "Blackout Question", icon: <Trophy size={20} /> },
 ];
 
-const EVENT_TIME = new Date("2026-07-17T09:00:00").getTime();
+// Event start time: July 17, 2026 at 9:00 AM West African Time (UTC+1).
+// Explicit timezone offset ensures the countdown is correct for every visitor
+// regardless of their browser's local timezone.
+const EVENT_TIME = new Date("2026-07-17T09:00:00+01:00").getTime();
 
 function useCountdown() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });

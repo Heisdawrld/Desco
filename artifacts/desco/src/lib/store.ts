@@ -192,11 +192,13 @@ export async function clearRegistrants(): Promise<void> {
 
 export async function fetchScores(): Promise<CohortScore[]> {
   const data = await api<CohortScore[]>("/scores");
-  if (data) {
+  if (data && data.length > 0) {
     _scores = data;
     persist("desco_scores", data);
     return data;
   }
+  // If the API returns an empty array (e.g. DB was wiped but not re-seeded),
+  // fall back to cached defaults so the scoreboard is never blank.
   return _scores;
 }
 
@@ -276,7 +278,7 @@ export async function adminLogout(): Promise<void> {
 
 export async function fetchNews(): Promise<NewsItem[]> {
   const data = await api<NewsItem[]>("/news");
-  if (data) {
+  if (data && data.length > 0) {
     _news = data;
     persist("desco_news", data);
     return data;

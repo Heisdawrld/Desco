@@ -41,7 +41,11 @@ export default function Scoreboard() {
   const [trends, setTrends] = useState<Record<string, "up" | "down" | "same">>({});
 
   useEffect(() => {
-    fetchScores().then(setScores);
+    // Catch here so a slow/failed first load doesn't leave the page blank.
+    // fetchScores already falls back to cached defaults on API failure.
+    fetchScores().then(setScores).catch((err) => {
+      console.error("[scoreboard] initial load failed:", err);
+    });
   }, []);
 
   // Poll every 5s, but PAUSE when the tab is hidden so we don't burn

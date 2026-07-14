@@ -5,6 +5,7 @@ import { Info } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { addRegistrant } from "@/lib/store";
+import { safeUUID } from "@/lib/uuid";
 
 function PageHeader({ label, title, subtitle }: { label: string; title: string; subtitle: string }) {
   return (
@@ -36,7 +37,7 @@ function AudienceForm() {
     setSending(true);
     try {
       await addRegistrant({
-        id: crypto.randomUUID(),
+        id: safeUUID(),
         type: "audience",
         name: form.name.trim(),
         department: form.dept,

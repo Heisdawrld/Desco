@@ -14,6 +14,7 @@ import {
   type Registrant, type CohortScore, type NewsItem
 } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
+import { safeUUID } from "@/lib/uuid";
 
 // 5 official Science Education cohorts. No Computer Science.
 const COHORTS = [
@@ -250,7 +251,7 @@ function AddContestantModal({ onClose, onAdded }: { onClose: () => void; onAdded
     setSubmitting(true);
     try {
       const added = await addRegistrant({
-        id: crypto.randomUUID(),
+        id: safeUUID(),
         type: "contestant",
         name: form.name.trim(),
         matric: form.matric.trim(),

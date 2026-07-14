@@ -179,7 +179,10 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+  // Empty dependency array — we only want to subscribe once on mount.
+  // Previously `[state]` caused the listener to be removed and re-added
+  // on every toast change, leading to unnecessary churn.
+  }, [])
 
   return {
     ...state,

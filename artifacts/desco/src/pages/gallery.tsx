@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Layout } from "@/components/layout";
 import { Instagram, CalendarDays } from "lucide-react";
-import { getNews, type NewsItem } from "@/lib/store";
+import { fetchNews, getNews, type NewsItem } from "@/lib/store";
 
 function PageHeader({ label, title, subtitle }: { label: string; title: string; subtitle: string }) {
   return (
@@ -22,7 +22,11 @@ export default function Gallery() {
   const [updates, setUpdates] = useState<NewsItem[]>([]);
 
   useEffect(() => {
-    setUpdates(getNews());
+    // Fetch fresh news from the API so admin-published updates show up.
+    // Falls back to cached defaults if the API is unreachable.
+    fetchNews()
+      .then((news) => setUpdates(news.length > 0 ? news : getNews()))
+      .catch(() => setUpdates(getNews()));
   }, []);
 
   return (
